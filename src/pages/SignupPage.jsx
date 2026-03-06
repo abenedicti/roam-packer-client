@@ -1,12 +1,9 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/Auth.context';
 import service from '../services/service.config';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 function Signup() {
-  const { setIsLoggedIn, setLoggedUserId } = useContext(AuthContext);
-
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -31,14 +28,7 @@ function Signup() {
 
     try {
       const response = await service.post('/auth/signup', body);
-
       console.log(response); // user created
-
-      if (response.data.authToken) {
-        localStorage.setItem('authToken', response.data.authToken);
-        setIsLoggedIn(true);
-        setLoggedUserId(response.data.payload._id);
-      }
 
       // redirect after signup
       navigate('/login');

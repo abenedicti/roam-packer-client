@@ -1,11 +1,11 @@
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/Auth.context';
-import service from '../services/service.config';
+
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 function Login() {
-  const { setIsLoggedIn, setLoggedUserId } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -27,18 +27,7 @@ function Login() {
     };
 
     try {
-      const response = await service.post('/auth/login', body);
-
-      console.log(response); // user authenticated
-
-      // store token
-      localStorage.setItem('authToken', response.data.authToken);
-
-      // update context
-      setIsLoggedIn(true);
-      setLoggedUserId(response.data.payload._id);
-
-      // redirect after login
+      await login(body);
       navigate('/profile');
     } catch (error) {
       if (error.response && error.response.status === 400) {
@@ -52,7 +41,7 @@ function Login() {
 
   return (
     <div>
-      <h1>Login Form</h1>
+      <h1>Login</h1>
 
       <form onSubmit={handleLogin}>
         <label>Email:</label>
@@ -62,9 +51,7 @@ function Login() {
           value={email}
           onChange={handleEmailChange}
         />
-
         <br />
-
         <label>Password:</label>
         <input
           type={showPassword ? 'text' : 'password'}
@@ -76,7 +63,6 @@ function Login() {
           {showPassword ? <FiEyeOff /> : <FiEye />}
         </button>
         <br />
-
         <button type="submit">Login</button>
 
         {errorMessage && <p>{errorMessage}</p>}

@@ -8,6 +8,7 @@ function AuthWrapper({ children }) {
   const [loggedUserId, setLoggedUserId] = useState(null);
   const [isAuthenticatingUser, setIsAuthenticatingUser] = useState(true);
 
+  //* check token when app is loading
   const authenticateUser = async () => {
     try {
       const response = await service.get('/auth/verify');
@@ -28,6 +29,19 @@ function AuthWrapper({ children }) {
     authenticateUser();
   }, []);
 
+  const login = async (loginData) => {
+    const response = await service.post('/auth/login', loginData);
+    localStorage.setItem('authToken', response.data.authToken);
+    setIsLoggedIn(true);
+    setLoggedUserId(response.data.payload._id);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken'); // delete token
+    setIsLoggedIn(false);
+    setLoggedUserId(null);
+  };
+
   if (isAuthenticatingUser) {
     return <h3>Authenticating...</h3>;
   }
@@ -39,6 +53,8 @@ function AuthWrapper({ children }) {
         setIsLoggedIn,
         loggedUserId,
         setLoggedUserId,
+        login,
+        logout,
       }}
     >
       {children}

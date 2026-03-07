@@ -1,0 +1,135 @@
+/* Navbar.css */
+
+/* --- Style de base --- */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #2c3e50;
+  padding: 0.5rem 1rem;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.navbar .logo a {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.navbar ul.menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar ul.menu li {
+  position: relative;
+  margin-left: 1rem;
+}
+
+.navbar ul.menu li a,
+.navbar ul.menu li span,
+.navbar .logout-button {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font: inherit;
+}
+
+/* Dropdown menu */
+.navbar li.dropdown:hover .submenu {
+  display: block;
+}
+
+.navbar ul.submenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #34495e;
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+  min-width: 150px;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.navbar ul.submenu li a {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: white;
+}
+
+.navbar ul.submenu li a:hover {
+  background-color: #1abc9c;
+}
+
+/* Logout button */
+.navbar .logout-button {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.navbar .logout-button:hover {
+  background-color: #e74c3c;
+  color: white;
+}
+
+/* Hamburger button */
+.hamburger {
+  display: none;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+/* --- Responsive mobile --- */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .navbar ul.menu {
+    flex-direction: column;
+    width: 100%;
+    display: none; /* hidden by default */
+  }
+
+  .navbar ul.menu.open {
+    display: flex; /* show menu when hamburger clicked */
+  }
+
+  .navbar ul.menu li {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .navbar ul.menu li a,
+  .navbar ul.menu li span,
+  .navbar .logout-button {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Submenu mobile (click to show) */
+  .navbar li.dropdown:hover .submenu {
+    display: none; /* disable hover on mobile */
+  }
+
+  .navbar li.dropdown:focus-within .submenu {
+    display: block; /* focus shows submenu */
+    position: static;
+    background: none;
+    padding-left: 1rem;
+  }
+}

@@ -1,38 +1,39 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import service from '../services/service.config';
 
 function CityPage() {
-  const { cityName } = useParams();
-  const [city, setCity] = useState({});
-  const [activities, setActivities] = useState([]);
+  const { country } = useParams();
+  const [cities, setCities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCity = async () => {
+    const fetchCities = async () => {
+      setLoading(true); // start loading
       try {
-        const cityData = await service.get(`/destinations/city/${cityName}`);
-        setCity(cityData.data);
-
-        const activitiesData = await service.get(
-          `/destinations/city/${cityName}/activities`,
-        );
-        setActivities(activitiesData.data.activities);
+        const res = await service.get(`/destinations/${country}/cities`);
+        setCities(res.data.cities);
       } catch (error) {
         console.log(error);
+        setCities([]); // empty if error
+      } finally {
+        setLoading(false); // end loading
       }
     };
+    fetchCities();
+  }, [country]);
 
-    fetchCity();
-  }, [cityName]);
+  if (loading) return <p>Loading cities...</p>;
+  if (!loading && cities.length === 0)
+    return <p>No cities found for this country</p>;
 
   return (
     <div>
-      <h1>{city.city}</h1>
-      <h2>Activities</h2>
+      <h1>Cities in {country}</h1>
       <ul>
-        {activities.map((a) => (
-          <li key={a.xid}>
-            {a.name} ({a.kind}) - {a.dist.toFixed(0)} m away
+        {cities.map((city) => (
+          <li key={city}>
+            <Link to={`/destinations/city/${city}`}>{city}</Link>
           </li>
         ))}
       </ul>

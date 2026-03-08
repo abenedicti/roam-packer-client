@@ -3,27 +3,16 @@ import { useParams, Link } from 'react-router-dom';
 import service from '../services/service.config';
 
 function CountryPage() {
-  //* get URL params
   const { continent } = useParams();
   const [countries, setCountries] = useState([]);
 
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await service.get('/destinations/destinations-data');
-
-        //* find continent
-        const continentObj = response.data.find(
-          (c) => c.continent === continent,
-        );
-
-        if (continentObj) {
-          setCountries(continentObj.countries);
-        } else {
-          setCountries([]);
-        }
-      } catch (error) {
-        console.log(error);
+        const res = await service.get(`/destinations/${continent}/countries`);
+        setCountries(res.data);
+      } catch (err) {
+        console.log(err);
       }
     };
     fetchCountries();
@@ -31,11 +20,12 @@ function CountryPage() {
 
   return (
     <div>
-      <h1>Coutries in {continent}</h1>
+      <h1>Countries in {continent}</h1>
       <ul>
         {countries.map((country) => (
           <li key={country}>
-            <Link to={`/destinations/city/${country}`}>{country}</Link>
+            {/* on va sur la page CityPage pour ce pays */}
+            <Link to={`/destinations/country/${country}`}>{country}</Link>
           </li>
         ))}
       </ul>

@@ -38,7 +38,8 @@ function App() {
 
         <Route path="/resources" element={<ExternalLinksPage />} />
 
-        <Route path="/destinations/city/:cityName" element={<CityPage />} />
+        {/* <Route path="/destinations/city/:cityName" element={<CityPage />} /> */}
+        <Route path="/destinations/country/:country" element={<CityPage />} />
         {/* Private routes */}
         <Route
           path="/profile"

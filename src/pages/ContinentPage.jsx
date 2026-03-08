@@ -8,11 +8,10 @@ function ContinentPage() {
   useEffect(() => {
     const fetchContinents = async () => {
       try {
-        //* Appel backend pour récupérer le JSON des continents
         const response = await service.get('/destinations/destinations-data');
         setContinents(response.data);
-      } catch (error) {
-        console.log(error);
+      } catch (err) {
+        console.log(err);
       }
     };
     fetchContinents();
@@ -20,12 +19,12 @@ function ContinentPage() {
 
   return (
     <div>
-      <h1>Continents</h1>
+      <h1>Destinations</h1>
       <ul>
-        {continents.map((continentObj) => (
-          <li key={continentObj.continent}>
-            <Link to={`/destinations/${continentObj.continent}/countries`}>
-              {continentObj.continent}
+        {continents.map((c) => (
+          <li key={c.continent}>
+            <Link to={`/destinations/${c.continent}/countries`}>
+              {c.continent}
             </Link>
           </li>
         ))}

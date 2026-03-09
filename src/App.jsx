@@ -19,6 +19,7 @@ import ItinerariesPage from './pages/ItinerariesPage';
 import ItineraryDetailsPage from './pages/ItineraryDetailsPage';
 import Navbar from './components/Navbar';
 import './App.css';
+import CityDetailsPage from './pages/CityDetailsPage';
 
 function App() {
   return (
@@ -36,10 +37,12 @@ function App() {
           element={<CountryPage />}
         />
 
-        <Route path="/resources" element={<ExternalLinksPage />} />
-
-        {/* <Route path="/destinations/city/:cityName" element={<CityPage />} /> */}
         <Route path="/destinations/country/:country" element={<CityPage />} />
+        <Route
+          path="/destinations/city/:cityName"
+          element={<CityDetailsPage />}
+        />
+        <Route path="/resources" element={<ExternalLinksPage />} />
         {/* Private routes */}
         <Route
           path="/profile"

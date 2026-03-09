@@ -1,53 +1,72 @@
-/* Navbar.css */
-
-/* --- Style de base --- */
 .navbar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   background-color: #2c3e50;
-  padding: 0.5rem 1rem;
+  position: relative;
   color: white;
   font-family: Arial, sans-serif;
 }
-
+.logo {
+  height: 1em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+.navbar .logo {
+  flex-shrink: 0;
+}
 .navbar .logo a {
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: bold;
   text-decoration: none;
 }
-
-.navbar ul.menu {
+.hamburger {
+  display: none;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  z-index: 2000;
+}
+.menu {
   display: flex;
   list-style: none;
   margin: 0;
   padding: 0;
+  flex-grow: 1;
+  transition: max-height 0.3s ease;
+  overflow: hidden;
+  justify-content: flex-end; /* hide close menu */
 }
 
-.navbar ul.menu li {
+.menu li {
   position: relative;
   margin-left: 1rem;
 }
 
-.navbar ul.menu li a,
-.navbar ul.menu li span,
-.navbar .logout-button {
+.menu li a,
+.menu li span,
+.logout-button {
   color: white;
   text-decoration: none;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   background: none;
   border: none;
   font: inherit;
-}
-
-/* Dropdown menu */
-.navbar li.dropdown:hover .submenu {
   display: block;
 }
 
-.navbar ul.submenu {
+.dropdown .submenu {
   display: none;
   position: absolute;
   top: 100%;
@@ -55,34 +74,39 @@
   background-color: #34495e;
   list-style: none;
   margin: 0;
-  padding: 0.5rem 0;
+  padding: 0;
   min-width: 150px;
   border-radius: 4px;
   z-index: 1000;
+  transition: max-height 0.3s ease;
+  overflow: hidden;
+  max-height: 0;
 }
 
-.navbar ul.submenu li a {
-  display: block;
+.dropdown .submenu li a {
   padding: 0.5rem 1rem;
-  color: white;
 }
 
-.navbar ul.submenu li a:hover {
+.dropdown .submenu li a:hover {
   background-color: #1abc9c;
 }
 
-/* Logout button */
-.navbar .logout-button {
-  cursor: pointer;
+@media (min-width: 769px) {
+  .dropdown:hover .submenu {
+    display: block;
+    max-height: none;
+  }
+}
+
+.logout-button {
   border-radius: 4px;
 }
 
-.navbar .logout-button:hover {
+.logout-button:hover {
   background-color: #e74c3c;
   color: white;
 }
 
-/* Hamburger button */
 .hamburger {
   display: none;
   font-size: 1.5rem;
@@ -92,44 +116,47 @@
   cursor: pointer;
 }
 
-/* --- Responsive mobile --- */
 @media (max-width: 768px) {
   .hamburger {
     display: block;
   }
 
-  .navbar ul.menu {
+  .menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
     flex-direction: column;
-    width: 100%;
-    display: none; /* hidden by default */
+    background-color: #2c3e50;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
   }
 
-  .navbar ul.menu.open {
-    display: flex; /* show menu when hamburger clicked */
+  .menu.open {
+    max-height: 1000px;
   }
 
-  .navbar ul.menu li {
+  .menu li {
     margin-left: 0;
     width: 100%;
   }
 
-  .navbar ul.menu li a,
-  .navbar ul.menu li span,
-  .navbar .logout-button {
+  .menu li a,
+  .menu li span,
+  .logout-button {
     width: 100%;
     text-align: left;
-    padding: 0.5rem 1rem;
   }
 
-  /* Submenu mobile (click to show) */
-  .navbar li.dropdown:hover .submenu {
-    display: none; /* disable hover on mobile */
-  }
-
-  .navbar li.dropdown:focus-within .submenu {
-    display: block; /* focus shows submenu */
+  .dropdown .submenu {
     position: static;
     background: none;
     padding-left: 1rem;
+  }
+
+  .dropdown.open .submenu {
+    display: block;
+    max-height: 500px;
   }
 }

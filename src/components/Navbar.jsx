@@ -7,13 +7,19 @@ function Navbar() {
   const { isLoggedIn, logout } = useContext(AuthContext);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  //* separate state for each dropdown
+  const [isItinerariesOpen, setItinerariesOpen] = useState(false);
+  const [isProfileOpen, setProfileOpen] = useState(false);
+
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
 
+  //* toggle submenu (to make it appear in mobile)
+  const toggleItineraries = () => setItinerariesOpen(!isItinerariesOpen);
+  const toggleProfile = () => setProfileOpen(!isProfileOpen);
   return (
     <nav className="navbar">
-      {/* Logo */}
       <div className="logo">
         <Link to="/">LOGO</Link>
       </div>
@@ -22,7 +28,6 @@ function Navbar() {
         ☰
       </button>
 
-      {/* Menu */}
       <ul className={`menu ${menuOpen ? 'open' : ''}`}>
         <li>
           <Link to="/destinations">Destinations</Link>
@@ -37,8 +42,8 @@ function Navbar() {
         {isLoggedIn && (
           <>
             {/* Itineraries dropdown */}
-            <li className="dropdown">
-              <span>Itinéraries ▾</span>
+            <li className={`dropdown ${isItinerariesOpen ? 'open' : ''}`}>
+              <span onClick={toggleItineraries}>Itinéraries ▾</span>
               <ul className="submenu">
                 <li>
                   <Link to="/create-itinerary">Create Itinerary</Link>
@@ -50,8 +55,8 @@ function Navbar() {
             </li>
 
             {/* Profile dropdown */}
-            <li className="dropdown">
-              <span>Profile ▾</span>
+            <li className={`dropdown ${isProfileOpen ? 'open' : ''}`}>
+              <span onClick={toggleProfile}>Profile ▾</span>
               <ul className="submenu">
                 <li>
                   <Link to="/profile">My Profile</Link>

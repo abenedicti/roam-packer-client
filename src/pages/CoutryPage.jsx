@@ -23,9 +23,11 @@ function CountryPage() {
       <h1>Countries in {continent}</h1>
       <ul>
         {countries.map((country) => (
-          <li key={country}>
-            {/* on va sur la page CityPage pour ce pays */}
-            <Link to={`/destinations/country/${country}`}>{country}</Link>
+          <li key={country.code}>
+            {/* redirect to  CityPage for this country */}
+            <Link to={`/destinations/country/${country.code}`}>
+              {country.name}
+            </Link>
           </li>
         ))}
       </ul>

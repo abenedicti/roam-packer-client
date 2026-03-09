@@ -15,13 +15,22 @@ function Navbar() {
     setMenuOpen(!menuOpen);
   };
 
+  //* to close dropdowns when clicking on submenu
+  const handleLinkClick = () => {
+    setItinerariesOpen(false);
+    setProfileOpen(false);
+
+    //* close menu on mobile
+    setMenuOpen(false);
+  };
+
   //* toggle submenu (to make it appear in mobile)
   const toggleItineraries = () => setItinerariesOpen(!isItinerariesOpen);
   const toggleProfile = () => setProfileOpen(!isProfileOpen);
   return (
     <nav className="navbar">
       <div className="logo">
-        <Link to="/">LOGO</Link>
+        <Link to="/">RoamPacker</Link>
       </div>
 
       <button className="hamburger" onClick={toggleMenu}>
@@ -30,13 +39,19 @@ function Navbar() {
 
       <ul className={`menu ${menuOpen ? 'open' : ''}`}>
         <li>
-          <Link to="/destinations">Destinations</Link>
+          <Link to="/destinations" onClick={handleLinkClick}>
+            Destinations
+          </Link>
         </li>
         <li>
-          <Link to="/matches">Match</Link>
+          <Link to="/matches" onClick={handleLinkClick}>
+            Match
+          </Link>
         </li>
         <li>
-          <Link to="/message">Messages</Link>
+          <Link to="/message" onClick={handleLinkClick}>
+            Messages
+          </Link>
         </li>
 
         {isLoggedIn && (
@@ -46,10 +61,14 @@ function Navbar() {
               <span onClick={toggleItineraries}>Itinéraries ▾</span>
               <ul className="submenu">
                 <li>
-                  <Link to="/create-itinerary">Create Itinerary</Link>
+                  <Link to="/create-itinerary" onClick={handleLinkClick}>
+                    Create Itinerary
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/my-itineraries">My Itineraries</Link>
+                  <Link to="/my-itineraries" onClick={handleLinkClick}>
+                    My Itineraries
+                  </Link>
                 </li>
               </ul>
             </li>
@@ -59,10 +78,14 @@ function Navbar() {
               <span onClick={toggleProfile}>Profile ▾</span>
               <ul className="submenu">
                 <li>
-                  <Link to="/profile">My Profile</Link>
+                  <Link to="/profile" onClick={handleLinkClick}>
+                    My Profile
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/favorites">Favorites</Link>
+                  <Link to="/favorites" onClick={handleLinkClick}>
+                    Favorites
+                  </Link>
                 </li>
               </ul>
             </li>

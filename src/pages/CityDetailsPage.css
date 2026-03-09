@@ -1,0 +1,89 @@
+/* Dropdown custom */
+.custom-dropdown {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1rem;
+  width: 200px;
+}
+
+.dropdown-button {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border-color: var(--btnAndLinks);
+  background: var(--hover);
+  color: var(--bg-light);
+  cursor: pointer;
+  font-size: 1rem;
+  text-align: center;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.dropdown-button:hover {
+  border: 1px solid var(--border);
+  background: var(--btnAndLinks);
+  color: var(--bg-light);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 500px;
+  overflow-y: auto;
+  background: var(--hover);
+  border: 1px solid var(--border);
+
+  border-radius: 6px;
+  margin-top: 0.2rem;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  padding: 0;
+}
+
+.dropdown-menu li {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+  white-space: normal; /* permet au texte de revenir à la ligne */
+  word-wrap: break-word; /* casse les mots trop longs */
+}
+
+.dropdown-menu li:last-child {
+  border-bottom: none;
+}
+
+.dropdown-menu li:hover {
+  background: var(--hover);
+  color: var(--bg-light);
+}
+
+.dropdown-menu li {
+  font-weight: bold;
+  background: var(--btnAndLinks);
+  color: var(--bg-light);
+}
+
+/* Liste des activités */
+.activities-list {
+  text-align: left;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.activities-list li {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+  word-break: break-word;
+}
+
+.activities-list li:last-child {
+  border-bottom: none;
+}

@@ -2,23 +2,34 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  background-color: #2c3e50;
+  background: var(--btnAndLinks);
   position: relative;
-  color: white;
+  color: var(--bg-light);
   font-family: Arial, sans-serif;
 }
 .logo {
   height: 1em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+  padding: 1.7em;
+  position: absolute;
+  top: -20px;
+  left: -10px;
+  color: white;
+  z-index: 2;
+  font-family: 'Combo', system-ui;
+  letter-spacing: 1px;
+  overflow: hidden;
+  width: 0;
+  animation: typing 5s ease-out forwards;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 10ch;
+  }
 }
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+
 .navbar .logo {
   flex-shrink: 0;
 }
@@ -37,6 +48,9 @@
   cursor: pointer;
   z-index: 2000;
 }
+.hamburger:hover {
+  background: none;
+}
 .menu {
   display: flex;
   list-style: none;
@@ -52,6 +66,9 @@
   position: relative;
   margin-left: 1rem;
 }
+.menu li a:hover {
+  color: var(--bg-light);
+}
 
 .menu li a,
 .menu li span,
@@ -64,6 +81,11 @@
   border: none;
   font: inherit;
   display: block;
+}
+.menu li a,
+.menu li span,
+.logout-button:hover {
+  color: var(--border);
 }
 
 .dropdown .submenu {
@@ -85,17 +107,11 @@
 
 .dropdown .submenu li a {
   padding: 0.5rem 1rem;
+  background: var(--btnAndLinks);
 }
 
 .dropdown .submenu li a:hover {
-  background-color: #1abc9c;
-}
-
-@media (min-width: 769px) {
-  .dropdown:hover .submenu {
-    display: block;
-    max-height: none;
-  }
+  background: var(--bg-section);
 }
 
 .logout-button {
@@ -103,7 +119,7 @@
 }
 
 .logout-button:hover {
-  background-color: #e74c3c;
+  background: var(--bg-section);
   color: white;
 }
 
@@ -115,10 +131,58 @@
   color: white;
   cursor: pointer;
 }
+@media (min-width: 700px) {
+  .menu {
+    display: flex;
+    flex-direction: row;
+    max-height: none;
+    overflow: visible;
+  }
 
-@media (max-width: 768px) {
+  .dropdown {
+    position: relative;
+  }
+
+  /* hide by default */
+  .dropdown .submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--bg);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    max-height: none;
+    overflow: visible;
+  }
+
+  .dropdown:hover .submenu {
+    display: block;
+  }
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+  }
+
+  .logo {
+    position: relative;
+    top: 0;
+    left: 0;
+    padding: 0.5rem 1rem;
+    width: auto;
+    animation: none;
+  }
+
   .hamburger {
     display: block;
+    order: 2;
+    margin-left: auto;
   }
 
   .menu {
@@ -127,7 +191,7 @@
     right: 0;
     left: 0;
     flex-direction: column;
-    background-color: #2c3e50;
+    background: var(--btnAndLinks);
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease;

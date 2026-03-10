@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/Auth.context';
 
 import { FiEye, FiEyeOff } from 'react-icons/fi';
@@ -67,6 +67,12 @@ function Login() {
 
         {errorMessage && <p>{errorMessage}</p>}
       </form>
+      <p className="signup-redirect">
+        Don't have an account yet ?{' '}
+        <Link to="/signup" className="signup-link">
+          Sign up here
+        </Link>
+      </p>
     </div>
   );
 }

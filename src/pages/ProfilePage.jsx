@@ -1,62 +1,105 @@
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LogoutButton from '../components/Logout';
 import '../pages/ProfilePage.css';
 import { countries } from '../data/countries';
+import service from '../services/service.config';
+import { AuthContext } from '../context/Auth.context';
 
 function ProfilePage() {
-  const [fullName, setFullName] = useState('');
-  const [nationality, setNationality] = useState('');
-  const [age, setAge] = useState('');
-  const [gender, setGender] = useState('');
-  const [country, setCountry] = useState('');
-  const [photoUrl, setPhotoUrl] = useState(''); //to display pic
+  const { loggedUserId } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  // eslint-disable-next-line no-unused-vars
+  const [userProfile, setUserProfile] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [criteria, setCriteria] = useState({
+    username: '',
+    nationality: '',
+    age: '',
+    gender: '',
+    countryOfResidence: '',
+    aboutMe: '',
+    photoUrl: '',
+  });
   const [uploading, setUploading] = useState(false);
 
-  // Upload of pic in Cloudinary
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!loggedUserId) return;
+
+      try {
+        const res = await service.get(`/users/${loggedUserId}`);
+        setUserProfile(res.data);
+
+        setCriteria({
+          username: res.data.username || '',
+          nationality: res.data.nationality || '',
+          age: res.data.age || '',
+          gender: res.data.gender || '',
+          countryOfResidence: res.data.countryOfResidence || '',
+          aboutMe: res.data.aboutMe || '',
+          photoUrl: res.data.photoUrl || '',
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchProfile();
+  }, [loggedUserId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCriteria((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     setUploading(true);
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', 'profile_unsigned'); // preset Cloudinary
+    formData.append('upload_preset', 'profile_unsigned');
 
     try {
       const res = await fetch(
         'https://api.cloudinary.com/v1_1/dlsfa7b0k/image/upload',
-        {
-          method: 'POST',
-          body: formData,
-        },
+        { method: 'POST', body: formData },
       );
       const data = await res.json();
-      setPhotoUrl(data.secure_url); // fetch img url
+      setCriteria((prev) => ({ ...prev, photoUrl: data.secure_url }));
     } catch (err) {
-      console.error('Upload error:', err);
+      console.error(err);
     } finally {
       setUploading(false);
     }
   };
 
-  //! to save profile => only console.log for now
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const profileData = { fullName, nationality, age, gender, country };
-    console.log('Profile saved:', profileData);
-    alert('Profile saved!');
+  const handleSave = async () => {
+    try {
+      await service.put(`/users/${loggedUserId}`, criteria);
+      setEditMode(false);
+      setUserProfile({ ...criteria });
+      alert('Profile saved!');
+    } catch (err) {
+      console.error(err);
+      alert('Error saving profile');
+    }
   };
 
   return (
     <div className="profile-page">
-      <h1>My Account</h1>
+      <h1>My Profile</h1>
       <div className="personal-info">
-        {/* PIC */}
         <div className="profile-picture">
-          {photoUrl ? (
+          {criteria.photoUrl ? (
             <>
-              <img src={photoUrl} alt="Profile" className="profile-img" />
+              <img
+                src={criteria.photoUrl}
+                alt="Profile"
+                className="profile-img"
+              />
               <div className="photo-buttons">
                 <label className="upload-label">
                   Change
@@ -67,7 +110,12 @@ function ProfilePage() {
                     style={{ display: 'none' }}
                   />
                 </label>
-                <button type="button" onClick={() => setPhotoUrl('')}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCriteria((prev) => ({ ...prev, photoUrl: '' }))
+                  }
+                >
                   Remove
                 </button>
               </div>
@@ -89,28 +137,28 @@ function ProfilePage() {
           {uploading && <p>Uploading...</p>}
         </div>
 
-        {/* FORM */}
+        {/* Form */}
         <div className="infos">
-          <form onSubmit={handleSubmit} className="profile-form">
+          <form className="profile-form" onSubmit={(e) => e.preventDefault()}>
             <label>
-              Full Name:
+              Username:
               <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                name="username"
+                value={criteria.username}
+                onChange={handleChange}
+                disabled={!editMode}
                 required
               />
             </label>
-
             <label>
               Nationality:
               <input
-                type="text"
-                value={nationality}
-                onChange={(e) => setNationality(e.target.value)}
+                name="nationality"
+                value={criteria.nationality}
+                onChange={handleChange}
                 list="country-list"
                 placeholder="I am from..."
-                required
+                disabled={!editMode}
               />
               <datalist id="country-list">
                 {countries.map((c) => (
@@ -118,49 +166,66 @@ function ProfilePage() {
                 ))}
               </datalist>
             </label>
-
             <label>
               Age:
               <input
                 type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
+                name="age"
+                value={criteria.age}
+                onChange={handleChange}
                 min="0"
-                required
+                disabled={!editMode}
               />
             </label>
-
             <label>
               Gender:
               <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                required
+                name="gender"
+                value={criteria.gender}
+                onChange={handleChange}
+                disabled={!editMode}
               >
-                <option value="">Select Gender</option>
+                <option value="">Select</option>
                 <option value="female">Female</option>
                 <option value="male">Male</option>
                 <option value="other">Other</option>
               </select>
             </label>
-
             <label>
               Country of Residence:
               <input
-                type="text"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
+                name="countryOfResidence"
+                value={criteria.countryOfResidence}
+                onChange={handleChange}
                 list="country-list"
-                placeholder="I live in..."
-                required
+                disabled={!editMode}
+              />
+            </label>
+            <label>
+              About Me:
+              <textarea
+                name="aboutMe"
+                value={criteria.aboutMe}
+                onChange={handleChange}
+                disabled={!editMode}
               />
             </label>
 
-            <button type="submit">Save</button>
+            {!editMode ? (
+              <button type="button" onClick={() => setEditMode(true)}>
+                Edit
+              </button>
+            ) : (
+              <button type="button" onClick={handleSave}>
+                Save
+              </button>
+            )}
           </form>
+          <button onClick={() => navigate('/find-match')}>
+            Find a Partner
+          </button>
         </div>
       </div>
-
       <LogoutButton />
     </div>
   );

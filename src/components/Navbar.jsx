@@ -27,6 +27,7 @@ function Navbar() {
   //* toggle submenu (to make it appear in mobile)
   const toggleItineraries = () => setItinerariesOpen(!isItinerariesOpen);
   const toggleProfile = () => setProfileOpen(!isProfileOpen);
+
   return (
     <nav className="navbar">
       <div className="logo">
@@ -43,64 +44,83 @@ function Navbar() {
             Destinations
           </Link>
         </li>
+
         <li>
-          <Link to="/matches" onClick={handleLinkClick}>
+          <Link
+            to={isLoggedIn ? '/matches' : '/login'}
+            onClick={handleLinkClick}
+          >
             Match
           </Link>
         </li>
+
         <li>
-          <Link to="/message" onClick={handleLinkClick}>
+          <Link
+            to={isLoggedIn ? '/message' : '/login'}
+            onClick={handleLinkClick}
+          >
             Messages
           </Link>
         </li>
 
-        {isLoggedIn && (
-          <>
-            {/* Itineraries dropdown */}
-            <li className={`dropdown ${isItinerariesOpen ? 'open' : ''}`}>
-              <span onClick={toggleItineraries}>Itinéraries ▾</span>
-              <ul className="submenu">
-                <li>
-                  <Link to="/create-itinerary" onClick={handleLinkClick}>
-                    Create Itinerary
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/my-itineraries" onClick={handleLinkClick}>
-                    My Itineraries
-                  </Link>
-                </li>
-              </ul>
-            </li>
-
-            {/* Profile dropdown */}
-            <li className={`dropdown ${isProfileOpen ? 'open' : ''}`}>
-              <span onClick={toggleProfile}>Profile ▾</span>
-              <ul className="submenu">
-                <li>
-                  <Link to="/profile" onClick={handleLinkClick}>
-                    My Profile
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/favorites" onClick={handleLinkClick}>
-                    Favorites
-                  </Link>
-                </li>
-              </ul>
-            </li>
-
+        {/* Itineraries visible for everyone */}
+        <li className={`dropdown ${isItinerariesOpen ? 'open' : ''}`}>
+          <span onClick={toggleItineraries}>Itineraries ▾</span>
+          <ul className="submenu">
             <li>
-              <button onClick={logout} className="logout-button">
-                Logout
-              </button>
+              <Link
+                to={isLoggedIn ? '/create-itinerary' : '/login'}
+                onClick={handleLinkClick}
+              >
+                Create Itinerary
+              </Link>
             </li>
-          </>
-        )}
+            <li>
+              <Link
+                to={isLoggedIn ? '/my-itineraries' : '/login'}
+                onClick={handleLinkClick}
+              >
+                My Itineraries
+              </Link>
+            </li>
+          </ul>
+        </li>
+
+        {/* Profile visible for everyone */}
+        <li className={`dropdown ${isProfileOpen ? 'open' : ''}`}>
+          <span onClick={toggleProfile}>Profile ▾</span>
+          <ul className="submenu">
+            <li>
+              <Link
+                to={isLoggedIn ? '/profile' : '/login'}
+                onClick={handleLinkClick}
+              >
+                My Profile
+              </Link>
+            </li>
+            {isLoggedIn && (
+              <li>
+                <Link to="/favorites" onClick={handleLinkClick}>
+                  Favorites
+                </Link>
+              </li>
+            )}
+          </ul>
+        </li>
 
         {!isLoggedIn && (
           <li>
-            <Link to="/login">Login</Link>
+            <Link to="/login" onClick={handleLinkClick}>
+              Login
+            </Link>
+          </li>
+        )}
+
+        {isLoggedIn && (
+          <li>
+            <button onClick={logout} className="logout-button">
+              Logout
+            </button>
           </li>
         )}
       </ul>

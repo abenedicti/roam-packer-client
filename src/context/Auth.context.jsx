@@ -12,7 +12,7 @@ function AuthWrapper({ children }) {
   const authenticateUser = async () => {
     try {
       const response = await service.get('/auth/verify');
-
+      console.log('Verify response:', response.data);
       setIsLoggedIn(true);
       setLoggedUserId(response.data.payload._id);
     } catch (error) {

@@ -1,13 +1,7 @@
-import { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/Auth.context';
+import { useState } from 'react';
 import service from '../services/service.config';
 
 function FindMatchPage() {
-  // eslint-disable-next-line no-unused-vars
-  const { loggedUserId } = useContext(AuthContext);
-  const navigate = useNavigate();
-
   const [criteria, setCriteria] = useState({
     budget: '',
     interests: '',
@@ -20,129 +14,99 @@ function FindMatchPage() {
     partyMood: false,
   });
 
-  // eslint-disable-next-line no-unused-vars
+  const [foundMatches, setFoundMatches] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (event) => {
-    const target = event.target;
-    const name = target.name;
-    const type = target.type;
-
-    let newValue;
-
-    if (type === 'checkbox') {
-      newValue = target.checked;
-    } else {
-      newValue = target.value;
-    }
-
-    setCriteria((previousCriteria) => {
-      return {
-        ...previousCriteria,
-        //* update only 'name'
-        [name]: newValue,
-      };
-    });
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setCriteria((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    //* check if fields are empty
-    const isEmpty = Object.values(criteria).every((value) => {
-      return value === '' || value === false;
-    });
-
-    if (isEmpty) {
-      alert('Please fill at least one criterion to find a match.');
-      return;
-    }
-
     setLoading(true);
-    try {
-      //* transform "sport, music" → ["sport", "music"]
-      const interestsList = criteria.interests
-        ? criteria.interests.split(',').map((interest) => interest.trim())
-        : [];
 
-      const body = {
+    try {
+      const formattedCriteria = {
         ...criteria,
-        interests: interestsList,
+        interests: criteria.interests
+          ? criteria.interests.split(',').map((i) => i.trim())
+          : [],
       };
 
-      const response = await service.post('/find-match', body);
-
-      const matches = response.data;
-
-      navigate('/matches', { state: { matches } });
-    } catch (error) {
-      console.error(error);
+      const res = await service.post('/find-match', formattedCriteria);
+      setFoundMatches(res.data);
+    } catch (err) {
+      console.error('Error fetching matches:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div>
-      <h1>Find a Partner</h1>
+  const handleSaveMatch = async (match) => {
+    try {
+      await service.post('/matches/save', { match });
+      alert(`Match saved: ${match.username}`);
+    } catch (err) {
+      console.error('Error saving match:', err);
+      alert('Failed to save match');
+    }
+  };
 
+  return (
+    <div className="find-match-page">
+      <h1>Find a Partner</h1>
       <form onSubmit={handleSubmit}>
         <label>
-          Budget* (€):
+          Budget (€):
           <input
             type="number"
             name="budget"
             value={criteria.budget}
             onChange={handleChange}
-            min="0"
-            required
           />
         </label>
 
         <label>
-          Interests* :
+          Interests (comma separated):
           <input
             type="text"
             name="interests"
             value={criteria.interests}
             onChange={handleChange}
-            placeholder="e.g., Hiking, Food, Culture"
-            required
           />
         </label>
 
         <label>
-          Travel Style* :
+          Travel Style:
           <input
             type="text"
             name="travelStyle"
             value={criteria.travelStyle}
             onChange={handleChange}
-            placeholder="e.g., Backpacking, Luxury"
-            required
           />
         </label>
 
         <label>
-          Start Date* :
+          Start Date:
           <input
             type="date"
             name="startDate"
             value={criteria.startDate}
             onChange={handleChange}
-            required
           />
         </label>
 
         <label>
-          Trip Duration* (days):
+          Trip Duration (months):
           <input
             type="number"
             name="tripDuration"
             value={criteria.tripDuration}
             onChange={handleChange}
-            min="0"
-            required
           />
         </label>
 
@@ -153,7 +117,6 @@ function FindMatchPage() {
             name="favoriteFood"
             value={criteria.favoriteFood}
             onChange={handleChange}
-            placeholder="e.g., French, Thai, Indian"
           />
         </label>
 
@@ -168,7 +131,7 @@ function FindMatchPage() {
         </label>
 
         <label>
-          First Trip :
+          First Trip:
           <input
             type="checkbox"
             name="firstTrip"
@@ -187,8 +150,32 @@ function FindMatchPage() {
           />
         </label>
 
-        <button type="submit">Send</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Searching...' : 'Find a Partner'}
+        </button>
       </form>
+
+      <h2>Matches Found</h2>
+      {foundMatches.length === 0 && <p>No matches yet</p>}
+
+      {foundMatches.map((match) => (
+        <div
+          key={match._id}
+          style={{ border: '1px solid #ccc', padding: '10px', margin: '10px' }}
+        >
+          <img src={match.photoUrl} alt={match.username} width="120" />
+          <p>
+            <strong>{match.username}</strong>
+          </p>
+          <p>Budget: {match.budget}</p>
+          <p>Interests: {match.interests.join(', ')}</p>
+          <p>Travel Style: {match.travelStyle}</p>
+          <p>Trip Duration: {match.tripDuration}</p>
+          <p>Favorite Food: {match.favoriteFood}</p>
+          <p>Preferred Country: {match.preferredCountry}</p>
+          <button onClick={() => handleSaveMatch(match)}>Save Match</button>
+        </div>
+      ))}
     </div>
   );
 }

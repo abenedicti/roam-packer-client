@@ -1,0 +1,66 @@
+.find-match-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.criteria-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.criteria-form input[type='text'],
+.criteria-form input[type='number'],
+.criteria-form input[type='date'] {
+  flex: 1 1 200px;
+  padding: 5px;
+}
+
+.criteria-form label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.criteria-form button {
+  padding: 10px 20px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.matches-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.match-card {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  width: 180px;
+  text-align: center;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.match-card:hover {
+  transform: scale(1.05);
+}
+
+.match-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.match-card button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+}

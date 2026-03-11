@@ -77,7 +77,7 @@ function App() {
           }
         />
         <Route
-          path="/message"
+          path="/messages"
           element={
             <PrivateRoute>
               <MessagePage />

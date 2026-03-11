@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Domine:wght@400..700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Combo&display=swap');
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
   line-height: 1.5;
   font-weight: 400;
   --bg-light: #eff1ed;

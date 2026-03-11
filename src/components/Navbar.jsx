@@ -56,7 +56,7 @@ function Navbar() {
 
         <li>
           <Link
-            to={isLoggedIn ? '/message' : '/login'}
+            to={isLoggedIn ? '/messages' : '/login'}
             onClick={handleLinkClick}
           >
             Messages

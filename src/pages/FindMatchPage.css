@@ -1,44 +1,46 @@
 .find-match-page {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 20px;
-  font-family: Arial, sans-serif;
-}
-
-.criteria-form {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
+  flex-direction: row;
+  justify-content: space-evenly;
 }
-
-.criteria-form input[type='text'],
-.criteria-form input[type='number'],
-.criteria-form input[type='date'] {
-  flex: 1 1 200px;
-  padding: 5px;
-}
-
-.criteria-form label {
+.find-match-page form {
   display: flex;
-  align-items: center;
-  gap: 5px;
+  flex-direction: column;
+  align-items: flex-end;
 }
-
-.criteria-form button {
-  padding: 10px 20px;
-  margin-top: 10px;
-  cursor: pointer;
+.find-match-page form input {
+  width: 200px;
+  height: 20px;
+  border-radius: 5px;
+  border: none;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
-
+.form-container label {
+  color: var(--btnAndLinks);
+}
+.form-container button {
+  width: 100%;
+}
+.form-container input[type='checkbox'] {
+  accent-color: var(--btnAndLinks);
+}
+.match-card {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
 .matches-container {
   display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+  flex-direction: column;
 }
 
-.match-card {
-  border: 1px solid #ccc;
+.card {
+  border: 2px solid var(--border);
+  background: var(--btnAndLinks);
   border-radius: 10px;
   padding: 10px;
   width: 180px;
@@ -47,20 +49,22 @@
   transition: transform 0.2s;
 }
 
-.match-card:hover {
+.card:hover {
   transform: scale(1.05);
+  border: 2px solid var(--bg-light);
 }
-
-.match-photo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 10px;
+.card p {
+  margin: 0;
+  text-align: left;
 }
 
 .match-card button {
   margin-top: 10px;
   padding: 5px 10px;
   cursor: pointer;
+  border: 1px solid var(--hover);
+}
+.match-card button:hover {
+  border: 1px solid var(--bg-light);
+  background: var(--bg-section);
 }

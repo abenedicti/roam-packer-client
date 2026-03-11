@@ -60,7 +60,7 @@
   padding: 6px 10px;
   border-radius: 10px;
   background: var(--bg-section);
-  color: var(--bg-light);
+  color: var(--border);
   cursor: pointer;
 }
 .infos {
@@ -89,4 +89,14 @@
   border-radius: 4px;
   background: var(--bg-light);
   border: transparent;
+}
+.btn-profile {
+  display: flex;
+  flex-direction: row;
+}
+.btn-profile button {
+  width: 100%;
+}
+.logout-btn {
+  background: var(--bg-section);
 }

@@ -1,9 +1,8 @@
 import { useContext, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/Auth.context';
-
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-
+// css in index.css
 function Login() {
   const { login } = useContext(AuthContext);
 
@@ -40,7 +39,7 @@ function Login() {
   };
 
   return (
-    <div>
+    <div className="login-text">
       <h1>Login</h1>
 
       <form onSubmit={handleLogin}>
@@ -59,7 +58,11 @@ function Login() {
           value={password}
           onChange={handlePasswordChange}
         />
-        <button type="button" onClick={toggleShowPassword}>
+        <button
+          type="button"
+          onClick={toggleShowPassword}
+          style={{ background: 'none', padding: '0', border: 'none' }}
+        >
           {showPassword ? <FiEyeOff /> : <FiEye />}
         </button>
         <br />

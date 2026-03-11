@@ -3,7 +3,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Combo&display=swap');
 :root {
   font-family: 'IBM Plex Sans', sans-serif;
-  line-height: 1.5;
   font-weight: 400;
   --bg-light: #eff1ed;
   --border: #373d20;
@@ -50,10 +49,11 @@ p {
 button {
   border-radius: 8px;
   border: 2px solid transparent;
-  padding: 0.6rem 0.8rem;
+  padding: 0.5rem 0.8rem;
+  margin: 5px;
   font-size: 1rem;
-  font-weight: 200;
-  font-family: 'Domine', serif;
+  font-weight: 500;
+  font-family: 'IBM Plex Sans', sans-serif;
   background: var(--btnAndLinks);
   cursor: pointer;
   transition:
@@ -63,5 +63,9 @@ button {
 button:hover {
   border-color: var(--btnAndLinks);
   background-color: var(--hover);
+  color: var(--bg-light);
+}
+.login-text label,
+p {
   color: var(--bg-light);
 }

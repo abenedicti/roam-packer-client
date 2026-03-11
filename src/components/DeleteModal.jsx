@@ -1,5 +1,4 @@
-import React from 'react';
-import '../components/DeleteModal.css'; // on mettra le style à côté
+import '../components/DeleteModal.css';
 
 function DeleteModal({ isOpen, title, children, onClose }) {
   if (!isOpen) return null;

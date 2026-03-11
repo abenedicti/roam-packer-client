@@ -38,7 +38,7 @@ function CityPage() {
   );
 
   return (
-    <div>
+    <div className="destinations">
       <h1>Cities in {country}</h1>
 
       {/* to filter cities */}

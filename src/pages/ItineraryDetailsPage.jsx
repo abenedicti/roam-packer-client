@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import service from '../services/service.config';
+import 'leaflet/dist/leaflet.css';
 
 function ItineraryDetailsPage() {
   const { itineraryId } = useParams();

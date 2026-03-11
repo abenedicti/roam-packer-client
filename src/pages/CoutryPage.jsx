@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import service from '../services/service.config';
+import '../pages/DestinationsPages.css';
 
 function CountryPage() {
   const { continent } = useParams();
@@ -19,7 +20,7 @@ function CountryPage() {
   }, [continent]);
 
   return (
-    <div>
+    <div className="destinations">
       <h1>Countries in {continent}</h1>
       <ul>
         {countries.map((country) => (
@@ -31,6 +32,9 @@ function CountryPage() {
           </li>
         ))}
       </ul>
+      <div
+        className={`countries ${continent.toLowerCase().replace(/\s/g, '')}`}
+      ></div>
     </div>
   );
 }

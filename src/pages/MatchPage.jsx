@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import '../pages/MatchPage.css';
 import MessageModal from '../components/MessageModal';
 import DeleteModal from '../components/DeleteModal';
-import NotificationModal from '../components/NotificationModal';
+import SendMessageModal from '../components/SendMessageModal';
 
 function MatchPage() {
   const { loggedUserId } = useContext(AuthContext);
@@ -17,7 +17,6 @@ function MatchPage() {
 
   //* state for NotificationModal
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState('');
 
   //* state for DeleteModal
   const [matchToDelete, setMatchToDelete] = useState(null);
@@ -57,7 +56,12 @@ function MatchPage() {
 
   return (
     <div className="match-page">
-      <button onClick={() => navigate('/find-match')}>Find your match</button>
+      <button
+        onClick={() => navigate('/find-match')}
+        className="find-match-btn"
+      >
+        Find your match
+      </button>
 
       <h1>Saved Matches</h1>
 
@@ -136,10 +140,6 @@ function MatchPage() {
             localStorage.setItem('messages', JSON.stringify(updated));
             window.dispatchEvent(new Event('messagesUpdated'));
 
-            //! not working, need to fix it
-            setNotificationMessage(
-              `Message envoyé avec succès à ${newMessage.receiver.username}`,
-            );
             setNotificationOpen(true);
             setTimeout(() => setNotificationOpen(false), 2000);
 
@@ -159,8 +159,7 @@ function MatchPage() {
         />
       )}
 
-      <NotificationModal
-        message={notificationMessage}
+      <SendMessageModal
         isOpen={notificationOpen}
         onClose={() => setNotificationOpen(false)}
       />
@@ -171,7 +170,7 @@ function MatchPage() {
           title="Confirm Delete"
           onClose={() => setDeleteModalOpen(false)}
         >
-          <p>Are you sure you want to delete this match?</p>
+          <p>Do you really want to delete this match?</p>
           <button onClick={handleConfirmDelete}>Yes, Delete</button>
           <button onClick={() => setDeleteModalOpen(false)}>Cancel</button>
         </DeleteModal>

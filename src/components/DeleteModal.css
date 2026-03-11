@@ -18,16 +18,24 @@
   width: 400px;
   max-width: 90%;
 }
+.delete-modal-content h3 {
+  color: var(--border);
+}
 
 .delete-modal-body {
   margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.delete-modal-body button {
+  width: 50%;
 }
 
 .delete-modal-close {
-  padding: 8px 12px;
-  cursor: pointer;
-  background-color: #007bff;
-  color: white;
+  padding: 8px 14px;
   border: none;
   border-radius: 6px;
+  cursor: pointer;
 }

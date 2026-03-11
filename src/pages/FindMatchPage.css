@@ -48,7 +48,12 @@
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
 }
-
+.card h3 {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .card:hover {
   transform: scale(1.05);
   border: 2px solid var(--bg-light);

@@ -221,12 +221,14 @@ function ProfilePage() {
               </button>
             )}
           </form>
-          <button onClick={() => navigate('/find-match')}>
-            Find a Partner
-          </button>
+          <div className="btn-profile">
+            <button onClick={() => navigate('/find-match')}>
+              Find a Partner
+            </button>
+            <LogoutButton />
+          </div>
         </div>
       </div>
-      <LogoutButton />
     </div>
   );
 }

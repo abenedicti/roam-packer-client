@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import service from '../services/service.config';
 import '../pages/CityDetailsPage.css';
 
 function CityDetailsPage() {
-  //* fetch city name from url
-  const { cityName } = useParams();
+  const { cityName, countryName } = useParams(); //* if in the url
 
   const [activities, setActivities] = useState([]);
-  const [itemsToShow, setItemsToShow] = useState(10); //* nomber of activities display at start
-  const [selectedType, setSelectedType] = useState('all'); //* type of act selected in the drpdown
+  const [itemsToShow, setItemsToShow] = useState(10);
+  const [selectedType, setSelectedType] = useState('all');
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [favorites, setFavorites] = useState([]);
 
+  //* fetch activities
   useEffect(() => {
     async function fetchActivities() {
       setLoading(true);
@@ -20,42 +22,66 @@ function CityDetailsPage() {
         const res = await service.get(
           `/destinations/city/${cityName}/activities`,
         );
-        setActivities(res.data.activities || []); //* send empty array to avoid errors when mapping
+        setActivities(res.data.activities || []);
       } catch (err) {
         console.error(err);
         setActivities([]);
       }
       setLoading(false);
     }
+
+    async function fetchFavorites() {
+      try {
+        const res = await service.get('/favorites');
+        setFavorites(res.data || []);
+      } catch (err) {
+        console.error('Error fetching favorites', err);
+        setFavorites([]);
+      }
+    }
+
     fetchActivities();
-  }, [cityName]); //* relaod data when user change the city search
+    fetchFavorites();
+  }, [cityName]);
 
-  if (loading) return <p>Loading activities...</p>;
-  if (!loading && activities.length === 0)
-    return <p>No activities found for {cityName}.</p>;
-
-  //* Extract all available type of activities for dropdown
-  // Array.from = trasnform Set in an array to be able to use map
   const allKinds = Array.from(
-    // new Set to keep unique value, prevent duplicating
-    new Set(activities.flatMap((act) => act.kind.split(','))), //* flatMap = split => arrays by category and bring them together
+    new Set(activities.flatMap((act) => act.kind.split(','))),
   );
 
-  //* Filtrer by chosen type
   const filteredActivities =
     selectedType === 'all'
       ? activities
       : activities.filter((act) => act.kind.includes(selectedType));
 
-  //* Sort by decreasing rating
   filteredActivities.sort((a, b) => (b.rate || 0) - (a.rate || 0));
 
-  // when select => close dropdown
   const handleSelectType = (type) => {
     setSelectedType(type);
     setDropdownOpen(false);
-    setItemsToShow(10); // reset "see more"
+    setItemsToShow(10);
   };
+
+  const handleToggleFavorite = async (activity) => {
+    try {
+      const res = await service.put('/add-favorite', {
+        xid: activity.xid,
+        name: activity.name,
+        city: cityName,
+        country: countryName,
+        kind: activity.kind,
+        rate: activity.rate,
+      });
+      setFavorites(res.data);
+    } catch (err) {
+      console.error('Error updating favorite', err);
+    }
+  };
+
+  const isFavorited = (xid) => favorites.some((f) => f.xid === xid);
+
+  if (loading) return <p>Loading activities...</p>;
+  if (!loading && activities.length === 0)
+    return <p>No activities found for {cityName}.</p>;
 
   return (
     <div>
@@ -92,8 +118,14 @@ function CityDetailsPage() {
 
       <ul className="activities-list">
         {filteredActivities.slice(0, itemsToShow).map((act) => (
-          <li key={act.xid}>
+          <li key={act.xid} className="activity-item">
             <strong>{act.name}</strong> ({act.kind}) – Rate: {act.rate || 0}
+            <span
+              className="favorite-icon"
+              onClick={() => handleToggleFavorite(act)}
+            >
+              {isFavorited(act.xid) ? <FaHeart color="red" /> : <FaRegHeart />}
+            </span>
           </li>
         ))}
       </ul>

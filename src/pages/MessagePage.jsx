@@ -74,7 +74,7 @@ function MessagePage() {
         const fakeResponse = {
           sender: { _id: selectedUser._id, username: selectedUser.username },
           receiver: { _id: loggedUserId, username: 'You' },
-          text: 'Hello! Thanks for your message 😄',
+          text: 'All good here! What about you ? ',
           createdAt: new Date(),
         };
         const updated = [...prev, fakeResponse];

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import service from '../services/service.config';
+import '../pages/DestinationsPages.css';
 
 function ContinentPage() {
   const [continents, setContinents] = useState([]);
@@ -18,7 +19,7 @@ function ContinentPage() {
   }, []);
 
   return (
-    <div>
+    <div className="destinations">
       <h1>Destinations</h1>
       <ul>
         {continents.map((c) => (

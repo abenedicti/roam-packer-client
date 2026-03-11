@@ -1,0 +1,78 @@
+.destinations {
+  width: 60%;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.destinations ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+}
+.destinations ul li {
+  border: 1px solid var(--btnAndLinks);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 10px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.destinations a:hover {
+  color: var(--hover);
+}
+.destinations input {
+  padding: 8px;
+  border-radius: 10px;
+  border: none;
+}
+.destinations input:focus {
+  outline: none;
+}
+.countries {
+  position: absolute;
+  bottom: -300px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.2;
+}
+
+/* Fond dynamique par continent */
+.countries.europe {
+  background-image: url('../img/europe.png');
+}
+
+.countries.asia {
+  background-image: url('../img/asia.png');
+}
+
+.countries.africa {
+  background-image: url('../img/africa.png');
+}
+.countries.southamerica {
+  background-image: url('../img/africa.png');
+}
+.countries.northamerica {
+  background-image: url('../img/usa.png');
+}
+.countries.oceania {
+  background-image: url('../img/africa.png');
+}
+
+.countries::before {
+  content: '';
+  position: absolute;
+  /* inset: 0; */
+  top: -10px;
+
+  z-index: 1;
+}

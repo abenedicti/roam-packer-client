@@ -1,20 +1,23 @@
 import { useEffect, useState } from 'react';
 import service from '../services/service.config';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function FavoritePage() {
   const [favorites, setFavorites] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [confirmation, setConfirmation] = useState(''); // state for confirmation message
+  const [isLoading, setIsLoading] = useState(true);
+  const [confirmation, setConfirmation] = useState('');
 
   useEffect(() => {
     async function fetchFavorites() {
+      setIsLoading(true);
       try {
         const res = await service.get('/users/favorites');
         setFavorites(res.data);
       } catch (err) {
         console.error('Error fetching favorites', err);
+      } finally {
+        setIsLoading(false);
       }
-      setLoading(false);
     }
 
     fetchFavorites();
@@ -46,36 +49,26 @@ function FavoritePage() {
     const updatedFavorites = [...addedFavorites, newFav];
     localStorage.setItem('addedFavorites', JSON.stringify(updatedFavorites));
 
-    setConfirmation(`✅ "${fav.name}" added to your page 'Create Itinerary!`);
+    setConfirmation(`✅ "${fav.name}" added to your page 'Create Itinerary!'`);
 
     setTimeout(() => setConfirmation(''), 2000);
   };
 
-  if (loading) return <p>Loading favorites...</p>;
+  if (isLoading) return <LoadingSpinner />;
 
   if (favorites.length === 0) return <p>You don't have any favorites yet.</p>;
 
   return (
-    <div>
+    <div className="favorites-page">
       <h1>My Favorite Activities</h1>
 
       {confirmation && (
-        <div
-          style={{
-            backgroundColor: 'white',
-            color: 'black',
-            padding: '0.5rem 1rem',
-            borderRadius: '5px',
-            marginBottom: '1rem',
-          }}
-        >
-          {confirmation}
-        </div>
+        <div className="confirmation-message">{confirmation}</div>
       )}
 
       <ul>
         {favorites.map((fav) => (
-          <li key={fav.xid} style={{ marginBottom: '1rem' }}>
+          <li key={fav.xid} className="favorite-item">
             <strong>{fav.name}</strong>
             <p>
               {fav.city}, {fav.country}

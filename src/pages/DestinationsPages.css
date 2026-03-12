@@ -46,7 +46,6 @@
   opacity: 0.2;
 }
 
-/* Fond dynamique par continent */
 .countries.europe {
   background-image: url('../img/europe.png');
 }
@@ -71,8 +70,6 @@
 .countries::before {
   content: '';
   position: absolute;
-  /* inset: 0; */
   top: -10px;
-
   z-index: 1;
 }

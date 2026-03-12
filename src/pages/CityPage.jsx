@@ -1,38 +1,40 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import service from '../services/service.config';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function CityPage() {
   //* fetch 'country' para from URL
   const { country } = useParams();
 
-  const [cities, setCities] = useState([]); //* List of cities fetch from BE
-  const [search, setSearch] = useState(''); //* user text to filter research
-  const [itemsToShow, setItemsToShow] = useState(10); //* cities display to the screen
-  const [loading, setLoading] = useState(true); //* datas are loading
+  const [cities, setCities] = useState([]); //* List of cities fetched from BE
+  const [search, setSearch] = useState(''); //* user text to filter
+  const [itemsToShow, setItemsToShow] = useState(10); //* cities displayed
+  const [isLoading, setIsLoading] = useState(true); //* spinner state
 
-  //* fetch datas when loading
+  //* fetch cities when loading
   useEffect(() => {
     const fetchCities = async () => {
-      setLoading(true); //* loading state
+      setIsLoading(true); //* start loading
       try {
         const res = await service.get(`/destinations/${country}/cities`);
-        setCities(res.data.cities || []); //* save cities or empty array if nothing
+        setCities(res.data.cities || []); //* save cities or empty array
       } catch (err) {
         console.error(err);
-        setCities([]); //* if error, empty the list
+        setCities([]); //* empty if error
+      } finally {
+        setIsLoading(false); //* stop loading
       }
-      setLoading(false); //* stop loading
     };
     fetchCities();
-  }, [country]); //* if change country restart request
+  }, [country]); //* if country changes, refetch
 
-  if (loading) return <p>Loading cities...</p>;
+  if (isLoading) return <LoadingSpinner />;
 
-  if (!loading && cities.length === 0)
+  if (!isLoading && cities.length === 0)
     return <p>No cities found for {country}</p>;
 
-  //* fetch cities regarding text added by the user
+  //* filter cities based on user input
   const filteredCities = cities.filter((city) =>
     city.toLowerCase().includes(search.toLowerCase()),
   );
@@ -41,17 +43,14 @@ function CityPage() {
     <div className="destinations">
       <h1>Cities in {country}</h1>
 
-      {/* to filter cities */}
       <input
         type="text"
         placeholder="Search cities..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)} //* update of search when user is tipping
+        onChange={(e) => setSearch(e.target.value)}
       />
 
-      {/* List fo cities*/}
       <ul>
-        {/* to not display all the list  */}
         {filteredCities.slice(0, itemsToShow).map((city) => (
           <li key={city}>
             <Link to={`/destinations/city/${city}`}>{city}</Link>
@@ -59,7 +58,6 @@ function CityPage() {
         ))}
       </ul>
 
-      {/* button to add 10 more cities to show*/}
       {itemsToShow < filteredCities.length && (
         <button onClick={() => setItemsToShow((prev) => prev + 10)}>
           See more

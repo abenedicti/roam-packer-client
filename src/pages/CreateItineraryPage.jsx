@@ -1,4 +1,3 @@
-// CreateItineraryPage.jsx
 import { useState, useEffect } from 'react';
 import service from '../services/service.config';
 import { useLocation } from 'react-router-dom';
@@ -8,14 +7,12 @@ import MapFlyTo from '../components/MapFlyTo';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
 import RequiredFieldModal from '../components/RequiredFieldModal';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function CreateItineraryPage() {
   const location = useLocation();
   const editId = location.state?.editId || null;
 
-  //* -----------------------------
-  //* STATE VARIABLES
-  //* -----------------------------
   const [title, setTitle] = useState('');
   const [points, setPoints] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -25,15 +22,19 @@ function CreateItineraryPage() {
   const [searchedPosition, setSearchedPosition] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // ⭐ spinner state
 
   //* load fav from api & localStorage
   useEffect(() => {
     const fetchFavorites = async () => {
+      setIsLoading(true); // start loading
       try {
         const res = await service.get('/users/favorites');
         setFavorites(res.data || []);
       } catch (err) {
         console.error('Error fetching favorites', err);
+      } finally {
+        setIsLoading(false); // stop loading
       }
     };
     fetchFavorites();
@@ -50,16 +51,9 @@ function CreateItineraryPage() {
   //* load iti if editing
   useEffect(() => {
     const loadItinerary = async () => {
-      if (!editId) {
-        // new iti = clear everything
-        setTitle('');
-        setPoints([]);
-        setAddedFromFavorites([]);
-        localStorage.removeItem('itineraryPoints');
-        localStorage.removeItem('addedFavorites');
-        return;
-      }
+      if (!editId) return;
 
+      setIsLoading(true);
       try {
         const res = await service.get(`/itineraries/${editId}`);
         const iti = res.data;
@@ -68,12 +62,12 @@ function CreateItineraryPage() {
         setAddedFromFavorites(iti.favorites || []);
       } catch (err) {
         console.error('Error loading itinerary for editing', err);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadItinerary();
   }, [editId]);
-
-  //* MAP HANDLERS
 
   const handleAddMapPoint = async ({ lat, lng }) => {
     try {
@@ -153,7 +147,6 @@ function CreateItineraryPage() {
   };
 
   //* submit iti
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title) {
@@ -176,7 +169,7 @@ function CreateItineraryPage() {
       localStorage.removeItem('itineraryPoints');
       localStorage.removeItem('addedFavorites');
 
-      // Stay on page → reset form if it was a new itinerary
+      // Stay on page = reset form if it was a new itinerary
       if (!editId) {
         setTitle('');
         setPoints([]);
@@ -190,6 +183,9 @@ function CreateItineraryPage() {
     }
   };
 
+  //* ⭐ Spinner pendant chargement
+  if (isLoading) return <LoadingSpinner />;
+
   return (
     <div className="create-itinerary-page">
       <h1>{editId ? 'Edit Itinerary' : 'Create New Itinerary'}</h1>
@@ -202,7 +198,6 @@ function CreateItineraryPage() {
           onChange={(e) => setTitle(e.target.value)}
         />
 
-        {/* SEARCH BAR */}
         <div className="search-container">
           <input
             type="text"
@@ -215,7 +210,6 @@ function CreateItineraryPage() {
           </button>
         </div>
 
-        {/* MAP */}
         <MapContainer
           center={[48.8566, 2.3522]}
           zoom={5}
@@ -242,7 +236,6 @@ function CreateItineraryPage() {
             ))}
         </MapContainer>
 
-        {/* ITINERARY POINTS */}
         <h2>Itinerary Points</h2>
         {points.length === 0 ? (
           <p>No points added yet.</p>
@@ -259,10 +252,8 @@ function CreateItineraryPage() {
           </ul>
         )}
 
-        {/* FAVORITES */}
         <h2>Your Favorites</h2>
 
-        {/* Backend favorites */}
         <ul>
           {favorites
             .filter((f) => !hiddenFavorites.includes(f._id))
@@ -285,7 +276,6 @@ function CreateItineraryPage() {
             ))}
         </ul>
 
-        {/* Added from FavoritePage */}
         <ul>
           {addedFromFavorites.map((fav, idx) => (
             <li key={fav.name + idx}>

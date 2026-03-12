@@ -2,10 +2,9 @@ import { useContext, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/Auth.context';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-// css in index.css
+
 function Login() {
   const { login } = useContext(AuthContext);
-
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -20,17 +19,13 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const body = {
-      email,
-      password,
-    };
+    const body = { email, password };
 
     try {
       await login(body);
       navigate('/profile');
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        console.log(error.response.data.errorMessage);
         setErrorMessage(error.response.data.errorMessage);
       } else {
         console.log(error);
@@ -39,7 +34,7 @@ function Login() {
   };
 
   return (
-    <div className="login-text">
+    <div className="auth-page login-page">
       <h1>Login</h1>
 
       <form onSubmit={handleLogin}>
@@ -49,29 +44,34 @@ function Login() {
           name="email"
           value={email}
           onChange={handleEmailChange}
+          required
         />
-        <br />
-        <label>Password:</label>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          name="password"
-          value={password}
-          onChange={handlePasswordChange}
-        />
-        <button
-          type="button"
-          onClick={toggleShowPassword}
-          style={{ background: 'none', padding: '0', border: 'none' }}
-        >
-          {showPassword ? <FiEyeOff /> : <FiEye />}
-        </button>
-        <br />
-        <button type="submit">Login</button>
 
-        {errorMessage && <p>{errorMessage}</p>}
+        <label>Password:</label>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={password}
+            onChange={handlePasswordChange}
+            required
+          />
+          <button
+            type="button"
+            onClick={toggleShowPassword}
+            style={{ background: 'none', border: 'none', marginLeft: '0.5rem' }}
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </button>
+        </div>
+
+        <button type="submit"></button>
+
+        {errorMessage && <p className="error">{errorMessage}</p>}
       </form>
+
       <p className="signup-redirect">
-        Don't have an account yet ?{' '}
+        Don't have an account yet?{' '}
         <Link to="/signup" className="signup-link">
           Sign up here
         </Link>

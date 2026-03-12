@@ -1,16 +1,16 @@
-import { useState, useEffect, useContext } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoutButton from '../components/Logout';
 import '../pages/ProfilePage.css';
 import { countries } from '../data/countries';
 import service from '../services/service.config';
 import { AuthContext } from '../context/Auth.context';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function ProfilePage() {
   const { loggedUserId } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // eslint-disable-next-line no-unused-vars
   const [userProfile, setUserProfile] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [criteria, setCriteria] = useState({
@@ -23,15 +23,14 @@ function ProfilePage() {
     photoUrl: '',
   });
   const [uploading, setUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!loggedUserId) return;
-
       try {
         const res = await service.get(`/users/${loggedUserId}`);
         setUserProfile(res.data);
-
         setCriteria({
           username: res.data.username || '',
           nationality: res.data.nationality || '',
@@ -77,6 +76,7 @@ function ProfilePage() {
   };
 
   const handleSave = async () => {
+    setIsSaving(true);
     try {
       await service.put(`/users/${loggedUserId}`, criteria);
       setEditMode(false);
@@ -85,11 +85,13 @@ function ProfilePage() {
     } catch (err) {
       console.error(err);
       alert('Error saving profile');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <div className="profile-page">
+    <div className="profile-page auth-page">
       <h1>My Profile</h1>
       <div className="personal-info">
         <div className="profile-picture">
@@ -137,7 +139,6 @@ function ProfilePage() {
           {uploading && <p>Uploading...</p>}
         </div>
 
-        {/* Form */}
         <div className="infos">
           <form className="profile-form" onSubmit={(e) => e.preventDefault()}>
             <label>
@@ -150,6 +151,7 @@ function ProfilePage() {
                 required
               />
             </label>
+
             <label>
               Nationality:
               <input
@@ -166,6 +168,7 @@ function ProfilePage() {
                 ))}
               </datalist>
             </label>
+
             <label>
               Age:
               <input
@@ -177,6 +180,7 @@ function ProfilePage() {
                 disabled={!editMode}
               />
             </label>
+
             <label>
               Gender:
               <select
@@ -191,6 +195,7 @@ function ProfilePage() {
                 <option value="other">Other</option>
               </select>
             </label>
+
             <label>
               Country of Residence:
               <input
@@ -201,6 +206,7 @@ function ProfilePage() {
                 disabled={!editMode}
               />
             </label>
+
             <label>
               About Me:
               <textarea
@@ -216,11 +222,12 @@ function ProfilePage() {
                 Edit
               </button>
             ) : (
-              <button type="button" onClick={handleSave}>
-                Save
+              <button type="button" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? <LoadingSpinner /> : 'Save'}
               </button>
             )}
           </form>
+
           <div className="btn-profile">
             <button onClick={() => navigate('/find-match')}>
               Find a Partner

@@ -73,3 +73,9 @@
   border: 1px solid var(--bg-light);
   background: var(--bg-section);
 }
+@media (max-width: 790px) {
+  .find-match-page {
+    flex-direction: column;
+    align-items: center;
+  }
+}

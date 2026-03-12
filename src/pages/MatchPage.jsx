@@ -2,38 +2,41 @@ import { useEffect, useState, useContext } from 'react';
 import service from '../services/service.config';
 import { AuthContext } from '../context/Auth.context';
 import { useNavigate } from 'react-router-dom';
+import Lottie from 'lottie-react';
 import '../pages/MatchPage.css';
+import LoadingSpinner from '../assets/spinner.json';
 import MessageModal from '../components/MessageModal';
 import DeleteModal from '../components/DeleteModal';
 import SendMessageModal from '../components/SendMessageModal';
 
 function MatchPage() {
   const { loggedUserId } = useContext(AuthContext);
-  const [savedMatches, setSavedMatches] = useState([]);
+  const navigate = useNavigate();
 
-  //* state fro MessageModal
+  const [savedMatches, setSavedMatches] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
 
-  //* state for NotificationModal
   const [notificationOpen, setNotificationOpen] = useState(false);
 
-  //* state for DeleteModal
   const [matchToDelete, setMatchToDelete] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const navigate = useNavigate();
-
   useEffect(() => {
     const fetchSavedMatches = async () => {
+      if (!loggedUserId) return;
+      setIsLoading(true);
       try {
         const res = await service.get(`/users/${loggedUserId}`);
         setSavedMatches(res.data.savedMatchedUsers || []);
       } catch (err) {
         console.error('Error fetching saved matches', err);
+      } finally {
+        setIsLoading(false);
       }
     };
-
     fetchSavedMatches();
   }, [loggedUserId]);
 
@@ -54,6 +57,19 @@ function MatchPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="spinner-container">
+        <Lottie
+          animationData={LoadingSpinner}
+          loop={true}
+          className="spinner"
+        />
+        <p>Loading matches...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="match-page">
       <button
@@ -65,60 +81,61 @@ function MatchPage() {
 
       <h1>Saved Matches</h1>
 
-      {savedMatches.length === 0 && <p>No saved matches yet</p>}
+      {savedMatches.length === 0 ? (
+        <p>No saved matches yet</p>
+      ) : (
+        <div className="found-match">
+          {savedMatches
+            .filter(
+              (match, idx, arr) =>
+                match.photoUrl &&
+                arr.findIndex((m) => m._id === match._id) === idx,
+            )
+            .map((match) => (
+              <div className="card" key={match._id}>
+                <img
+                  src={match.photoUrl}
+                  alt={match.username}
+                  className="match-photo"
+                />
+                <h3>{match.username}</h3>
+                <p>
+                  <strong>Match:</strong> {match.matchPercentage}%
+                </p>
+                <p>
+                  <strong>Travel style:</strong> {match.travelStyle}
+                </p>
+                <p>
+                  <strong>Budget:</strong> {match.budget}€
+                </p>
+                <p>
+                  <strong>Preferred country:</strong> {match.preferredCountry}
+                </p>
+                <p>
+                  <strong>Favorite food:</strong> {match.favoriteFood}
+                </p>
 
-      <div className="found-match">
-        {savedMatches
-          .filter(
-            (match, idx, arr) =>
-              match.photoUrl &&
-              arr.findIndex((m) => m._id === match._id) === idx,
-          )
-          .map((match, index) => (
-            <div className="card" key={index}>
-              <img
-                src={match.photoUrl}
-                alt={match.username}
-                className="match-photo"
-              />
-              <h3>{match.username}</h3>
-              <p>
-                <strong>Match:</strong> {match.matchPercentage}%
-              </p>
-              <p>
-                <strong>Travel style:</strong> {match.travelStyle}
-              </p>
-              <p>
-                <strong>Budget:</strong> {match.budget}€
-              </p>
-              <p>
-                <strong>Preferred country:</strong> {match.preferredCountry}
-              </p>
-              <p>
-                <strong>Favorite food:</strong> {match.favoriteFood}
-              </p>
+                <button
+                  className="message-btn"
+                  onClick={() => {
+                    setSelectedMatch(match);
+                    setMessageModalOpen(true);
+                  }}
+                >
+                  Send a message
+                </button>
 
-              <button
-                className="message-btn"
-                onClick={() => {
-                  setSelectedMatch(match);
-                  setMessageModalOpen(true);
-                }}
-              >
-                Send a message
-              </button>
+                <button
+                  onClick={() => confirmDeleteMatch(match._id)}
+                  className="delete-btn"
+                >
+                  Delete Match
+                </button>
+              </div>
+            ))}
+        </div>
+      )}
 
-              <button
-                onClick={() => confirmDeleteMatch(match._id)}
-                className="delete-btn"
-              >
-                Delete Match
-              </button>
-            </div>
-          ))}
-      </div>
-
-      {/* Message Modal */}
       {selectedMatch && (
         <MessageModal
           match={selectedMatch}
@@ -128,14 +145,10 @@ function MatchPage() {
             setSelectedMatch(null);
           }}
           onMessageSent={(newMessage) => {
-            //* store msg
             const stored = JSON.parse(localStorage.getItem('messages')) || [];
             const updated = [
               ...stored,
-              {
-                ...newMessage,
-                sender: { _id: loggedUserId, username: 'You' },
-              },
+              { ...newMessage, sender: { _id: loggedUserId, username: 'You' } },
             ];
             localStorage.setItem('messages', JSON.stringify(updated));
             window.dispatchEvent(new Event('messagesUpdated'));
@@ -143,7 +156,6 @@ function MatchPage() {
             setNotificationOpen(true);
             setTimeout(() => setNotificationOpen(false), 2000);
 
-            //* fake match answer
             setTimeout(() => {
               const fakeResponse = {
                 sender: newMessage.receiver,

@@ -72,3 +72,15 @@ p {
 .leaflet-container {
   z-index: 0;
 }
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  margin: 0 auto;
+}
+.animation-container {
+  display: flex;
+
+  justify-content: center;
+}

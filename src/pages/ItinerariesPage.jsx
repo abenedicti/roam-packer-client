@@ -2,18 +2,23 @@ import { useEffect, useState } from 'react';
 import service from '../services/service.config';
 import { Link, useNavigate } from 'react-router-dom';
 import '../pages/DestinationsPages.css';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function ItinerariesPage() {
   const [itineraries, setItineraries] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchItineraries = async () => {
+      setIsLoading(true);
       try {
         const response = await service.get('/itineraries');
         setItineraries(response.data);
       } catch (error) {
         console.log(error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchItineraries();
@@ -38,8 +43,10 @@ function ItinerariesPage() {
     navigate('/create-itinerary');
   };
 
+  if (isLoading) return <LoadingSpinner />;
+
   return (
-    <div className="destinations">
+    <div className="itineraries-page">
       <h1>My Itineraries</h1>
 
       <button

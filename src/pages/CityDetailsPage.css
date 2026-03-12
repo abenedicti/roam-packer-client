@@ -51,8 +51,8 @@
   transition:
     background 0.2s,
     color 0.2s;
-  white-space: normal; /* permet au texte de revenir à la ligne */
-  word-wrap: break-word; /* casse les mots trop longs */
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .dropdown-menu li:last-child {
@@ -70,7 +70,6 @@
   color: var(--bg-light);
 }
 
-/* Liste des activités */
 .activities-list {
   text-align: left;
   padding: 0;
@@ -86,4 +85,13 @@
 
 .activities-list li:last-child {
   border-bottom: none;
+}
+.favorite-icon {
+  margin-left: 12px;
+  cursor: pointer;
+  color: var(--bg-section);
+}
+
+.stars {
+  margin-left: 6px;
 }

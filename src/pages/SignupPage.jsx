@@ -20,21 +20,13 @@ function Signup() {
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    const body = {
-      email,
-      username,
-      password,
-    };
+    const body = { email, username, password };
 
     try {
-      const response = await service.post('/auth/signup', body);
-      console.log(response); // user created
-
-      // redirect after signup
-      navigate('/login');
+      await service.post('/auth/signup', body);
+      navigate('/login'); // redirect after signup
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        console.log(error.response.data.errorMessage);
         setErrorMessage(error.response.data.errorMessage);
       } else {
         console.log(error);
@@ -43,7 +35,7 @@ function Signup() {
   };
 
   return (
-    <div>
+    <div className="auth-page signup-page">
       <h1>Signup</h1>
 
       <form onSubmit={handleSignup}>
@@ -53,9 +45,8 @@ function Signup() {
           name="email"
           value={email}
           onChange={handleEmailChange}
+          required
         />
-
-        <br />
 
         <label>Username:</label>
         <input
@@ -63,25 +54,30 @@ function Signup() {
           name="username"
           value={username}
           onChange={handleUsernameChange}
+          required
         />
-
-        <br />
 
         <label>Password:</label>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          name="password"
-          value={password}
-          onChange={handlePasswordChange}
-        />
-        <button type="button" onClick={toggleShowPassword}>
-          {showPassword ? <FiEyeOff /> : <FiEye />}
-        </button>
-        <br />
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={password}
+            onChange={handlePasswordChange}
+            required
+          />
+          <button
+            type="button"
+            onClick={toggleShowPassword}
+            style={{ background: 'none', border: 'none', marginLeft: '0.5rem' }}
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
+          </button>
+        </div>
 
-        <button type="submit">Signup</button>
+        <button type="submit"></button>
 
-        {errorMessage && <p>{errorMessage}</p>}
+        {errorMessage && <p className="error">{errorMessage}</p>}
       </form>
     </div>
   );

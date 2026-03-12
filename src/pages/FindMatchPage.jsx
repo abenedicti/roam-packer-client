@@ -2,11 +2,11 @@ import { useState } from 'react';
 import service from '../services/service.config';
 import '../pages/FindMatchPage.css';
 import NotificationModal from '../components/NotificationModal.jsx';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function FindMatchPage() {
   const [foundMatches, setFoundMatches] = useState([]);
-  const [loading, setLoading] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMatch, setModalMatch] = useState(null);
 
@@ -32,7 +32,7 @@ function FindMatchPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
 
     try {
       const formattedCriteria = {
@@ -47,7 +47,7 @@ function FindMatchPage() {
     } catch (err) {
       console.error('Error fetching matches:', err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -62,6 +62,8 @@ function FindMatchPage() {
       setModalOpen(true);
     }
   };
+
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="find-match-page">
@@ -165,11 +167,12 @@ function FindMatchPage() {
             />
           </label>
 
-          <button type="submit" disabled={loading}>
-            {loading ? 'Searching...' : 'Search'}
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? 'Searching...' : 'Search'}
           </button>
         </form>
       </div>
+
       <div className="matches-container">
         <h1>Matches Found</h1>
         {foundMatches.length === 0 && <p>No matches yet</p>}
@@ -191,6 +194,7 @@ function FindMatchPage() {
             </div>
           ))}
         </div>
+
         <NotificationModal
           match={modalMatch}
           isOpen={modalOpen}

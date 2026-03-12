@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useRef, useMemo } from 'react';
 import { AuthContext } from '../context/Auth.context';
 import '../pages/MessagePage.css';
 
@@ -8,39 +8,45 @@ function MessagePage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState('');
 
-  //* load msg from localStorage and updates
+  const messagesEndRef = useRef(null);
+
+  //* Helper pour stocker les messages
+  const appendMessageToStorage = (msg) => {
+    const stored = JSON.parse(localStorage.getItem('messages')) || [];
+    const updated = [...stored, msg];
+    localStorage.setItem('messages', JSON.stringify(updated));
+    return updated;
+  };
+
+  //* Load messages initial & mise à jour via event
   useEffect(() => {
     const fetchMessages = () => {
       const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
       setMessages(storedMessages);
     };
 
-    //* initial load
     fetchMessages();
-
-    //* read msg from MatchPage
     window.addEventListener('messagesUpdated', fetchMessages);
-
-    return () => {
-      window.removeEventListener('messagesUpdated', fetchMessages);
-    };
+    return () => window.removeEventListener('messagesUpdated', fetchMessages);
   }, []);
 
-  //* not include connected user
-  const uniqueUsers = Array.from(
-    new Map(
-      messages
-        .map((msg) => {
-          if (msg.sender._id === loggedUserId) return msg.receiver;
-          if (msg.receiver._id === loggedUserId) return msg.sender;
-          return null; // ignore les messages entre autres utilisateurs
-        })
-        .filter((user) => user && user._id !== loggedUserId)
-        .map((user) => [user._id, user]),
-    ).values(),
-  );
+  //* Conversations uniques
+  const uniqueUsers = useMemo(() => {
+    return Array.from(
+      new Map(
+        messages
+          .map((msg) => {
+            if (msg.sender._id === loggedUserId) return msg.receiver;
+            if (msg.receiver._id === loggedUserId) return msg.sender;
+            return null;
+          })
+          .filter((user) => user && user._id !== loggedUserId)
+          .map((user) => [user._id, user]),
+      ).values(),
+    );
+  }, [messages, loggedUserId]);
 
-  //* msg from selected conv
+  //* Conversation active
   const currentConversation = selectedUser
     ? messages.filter(
         (msg) =>
@@ -50,6 +56,11 @@ function MessagePage() {
             msg.receiver._id === selectedUser._id),
       )
     : [];
+
+  //* Auto-scroll sur le dernier message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, selectedUser]);
 
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedUser) return;
@@ -61,27 +72,29 @@ function MessagePage() {
       createdAt: new Date(),
     };
 
-    setMessages((prev) => {
-      const updated = [...prev, newMessage];
-      localStorage.setItem('messages', JSON.stringify(updated));
-      return updated;
-    });
+    const updated = appendMessageToStorage(newMessage);
+    setMessages(updated);
     setMessageText('');
 
-    //* fake match answer
+    //* Fake match answer
     setTimeout(() => {
-      setMessages((prev) => {
-        const fakeResponse = {
-          sender: { _id: selectedUser._id, username: selectedUser.username },
-          receiver: { _id: loggedUserId, username: 'You' },
-          text: 'All good here! What about you ? ',
-          createdAt: new Date(),
-        };
-        const updated = [...prev, fakeResponse];
-        localStorage.setItem('messages', JSON.stringify(updated));
-        return updated;
-      });
+      const fakeResponse = {
+        sender: { _id: selectedUser._id, username: selectedUser.username },
+        receiver: { _id: loggedUserId, username: 'You' },
+        text: 'All good here! What about you?',
+        createdAt: new Date(),
+      };
+      const updatedWithFake = appendMessageToStorage(fakeResponse);
+      setMessages(updatedWithFake);
     }, 1500);
+  };
+
+  //* Envoi avec Enter
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
   return (
@@ -108,9 +121,7 @@ function MessagePage() {
               {currentConversation.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`message ${
-                    msg.sender._id === loggedUserId ? 'sent' : 'received'
-                  }`}
+                  className={`message ${msg.sender._id === loggedUserId ? 'sent' : 'received'}`}
                 >
                   <p>{msg.text}</p>
                   <span className="time">
@@ -121,6 +132,7 @@ function MessagePage() {
                   </span>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
 
             <div className="message-input">
@@ -129,6 +141,7 @@ function MessagePage() {
                 placeholder="Type your message..."
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
+                onKeyDown={handleKeyPress}
               />
               <button onClick={handleSendMessage}>Send</button>
             </div>

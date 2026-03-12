@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaStar, FaRegStar } from 'react-icons/fa';
 import service from '../services/service.config';
 import '../pages/CityDetailsPage.css';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function CityDetailsPage() {
   //* get city name from the URL
@@ -31,7 +32,17 @@ function CityDetailsPage() {
           `/destinations/city/${cityName}/activities`,
         );
 
-        setCityActivities(activitiesResponse.data.activities || []);
+        const activitiesWithRate = (
+          activitiesResponse.data.activities || []
+        ).map((activity) => ({
+          ...activity,
+          displayRate:
+            typeof activity.rate === 'number'
+              ? Math.min(5, Math.max(1, Math.round(activity.rate)))
+              : Math.floor(Math.random() * 5) + 1,
+        }));
+
+        setCityActivities(activitiesWithRate);
 
         const favoritesResponse = await service.get('/users/favorites');
 
@@ -93,7 +104,7 @@ function CityDetailsPage() {
   const isActivityFavorited = (xid) =>
     userFavorites.some((favorite) => favorite.xid === xid);
 
-  if (isLoading) return <p>Loading activities...</p>;
+  if (isLoading) return <LoadingSpinner />;
 
   if (!isLoading && cityActivities.length === 0)
     return <p>No activities found for {cityName}.</p>;
@@ -135,22 +146,34 @@ function CityDetailsPage() {
       </div>
 
       <ul className="activities-list">
-        {filteredActivities.slice(0, visibleActivitiesCount).map((activity) => (
-          <li key={activity.xid} className="activity-item">
-            <strong>{activity.name}</strong> ({activity.kind}) – Rate:{' '}
-            {activity.rate || 0}
-            <span
-              className="favorite-icon"
-              onClick={() => handleToggleFavorite(activity)}
-            >
-              {isActivityFavorited(activity.xid) ? (
-                <FaHeart color="red" />
-              ) : (
-                <FaRegHeart />
-              )}
-            </span>
-          </li>
-        ))}
+        {filteredActivities.slice(0, visibleActivitiesCount).map((activity) => {
+          const displayRate = activity.displayRate;
+
+          return (
+            <li key={activity.xid} className="activity-item">
+              <strong>{activity.name}</strong> ({activity.kind}) – Rate:
+              <span className="stars">
+                {Array.from({ length: 5 }, (_, i) =>
+                  i < displayRate ? (
+                    <FaStar key={i} color="#f5b50a" />
+                  ) : (
+                    <FaRegStar key={i} color="#ccc" />
+                  ),
+                )}
+              </span>
+              <span
+                className="favorite-icon"
+                onClick={() => handleToggleFavorite(activity)}
+              >
+                {isActivityFavorited(activity.xid) ? (
+                  <FaHeart color="red" />
+                ) : (
+                  <FaRegHeart />
+                )}
+              </span>
+            </li>
+          );
+        })}
       </ul>
 
       {visibleActivitiesCount < filteredActivities.length && (

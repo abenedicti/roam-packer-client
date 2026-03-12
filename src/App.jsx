@@ -13,7 +13,6 @@ import FindMatchPage from './pages/FindMatchPage';
 import MatchPage from './pages/MatchPage';
 import NotFoundPage from './pages/NotFoundPage';
 import MessagePage from './pages/MessagePage';
-import ExternalLinksPage from './pages/ExternalLinksPage';
 import CreateItineraryPage from './pages/CreateItineraryPage';
 import ItinerariesPage from './pages/ItinerariesPage';
 import ItineraryDetailsPage from './pages/ItineraryDetailsPage';
@@ -42,7 +41,7 @@ function App() {
           path="/destinations/city/:cityName"
           element={<CityDetailsPage />}
         />
-        <Route path="/resources" element={<ExternalLinksPage />} />
+
         {/* Private routes */}
         <Route
           path="/profile"

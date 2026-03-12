@@ -5,82 +5,97 @@ import service from '../services/service.config';
 import '../pages/CityDetailsPage.css';
 
 function CityDetailsPage() {
-  const { cityName, countryName } = useParams(); //* if in the url
+  //* get city name from the URL
+  const { cityName, countryName } = useParams();
+  const [cityActivities, setCityActivities] = useState([]);
 
-  const [activities, setActivities] = useState([]);
-  const [itemsToShow, setItemsToShow] = useState(10);
-  const [selectedType, setSelectedType] = useState('all');
-  const [loading, setLoading] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [favorites, setFavorites] = useState([]);
+  //* number of activities currently displayed
+  const [visibleActivitiesCount, setVisibleActivitiesCount] = useState(10);
 
-  //* fetch activities
+  const [selectedActivityType, setSelectedActivityType] = useState('all');
+
+  //* loading state while fetching API data
+  const [isLoading, setIsLoading] = useState(true);
+
+  //* controls dropdown visibility
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userFavorites, setUserFavorites] = useState([]);
+
+  //* fetch activities and favorites when the page loads
   useEffect(() => {
-    async function fetchActivities() {
-      setLoading(true);
+    async function fetchCityData() {
+      setIsLoading(true);
+
       try {
-        const res = await service.get(
+        const activitiesResponse = await service.get(
           `/destinations/city/${cityName}/activities`,
         );
-        setActivities(res.data.activities || []);
-      } catch (err) {
-        console.error(err);
-        setActivities([]);
+
+        setCityActivities(activitiesResponse.data.activities || []);
+
+        const favoritesResponse = await service.get('/users/favorites');
+
+        setUserFavorites(favoritesResponse.data || []);
+      } catch (error) {
+        console.error('Error loading city data', error);
+        setCityActivities([]);
+        setUserFavorites([]);
       }
-      setLoading(false);
+
+      setIsLoading(false);
     }
 
-    async function fetchFavorites() {
-      try {
-        const res = await service.get('/favorites');
-        setFavorites(res.data || []);
-      } catch (err) {
-        console.error('Error fetching favorites', err);
-        setFavorites([]);
-      }
-    }
-
-    fetchActivities();
-    fetchFavorites();
+    fetchCityData();
   }, [cityName]);
 
-  const allKinds = Array.from(
-    new Set(activities.flatMap((act) => act.kind.split(','))),
+  //* extract all activity categories (kinds) from the activities list
+  const activityTypes = Array.from(
+    new Set(cityActivities.flatMap((activity) => activity.kind.split(','))),
   );
 
   const filteredActivities =
-    selectedType === 'all'
-      ? activities
-      : activities.filter((act) => act.kind.includes(selectedType));
+    selectedActivityType === 'all'
+      ? cityActivities
+      : cityActivities.filter((activity) =>
+          activity.kind.includes(selectedActivityType),
+        );
 
   filteredActivities.sort((a, b) => (b.rate || 0) - (a.rate || 0));
 
-  const handleSelectType = (type) => {
-    setSelectedType(type);
-    setDropdownOpen(false);
-    setItemsToShow(10);
+  const handleSelectActivityType = (type) => {
+    setSelectedActivityType(type);
+    setIsDropdownOpen(false);
+    setVisibleActivitiesCount(10); //* reset number of displayed activities
   };
 
+  //* add or remove an activity from favorites
   const handleToggleFavorite = async (activity) => {
     try {
-      const res = await service.put('/add-favorite', {
+      const response = await service.put('/users/favorites/toggle', {
         xid: activity.xid,
         name: activity.name,
         city: cityName,
         country: countryName,
         kind: activity.kind,
         rate: activity.rate,
+        lat: activity.lat,
+        lng: activity.lon,
       });
-      setFavorites(res.data);
-    } catch (err) {
-      console.error('Error updating favorite', err);
+
+      //* backend returns the updated favorites list
+      setUserFavorites(response.data);
+    } catch (error) {
+      console.error('Error updating favorite', error);
     }
   };
 
-  const isFavorited = (xid) => favorites.some((f) => f.xid === xid);
+  //* check if an activity is already saved as favorite
+  const isActivityFavorited = (xid) =>
+    userFavorites.some((favorite) => favorite.xid === xid);
 
-  if (loading) return <p>Loading activities...</p>;
-  if (!loading && activities.length === 0)
+  if (isLoading) return <p>Loading activities...</p>;
+
+  if (!isLoading && cityActivities.length === 0)
     return <p>No activities found for {cityName}.</p>;
 
   return (
@@ -90,26 +105,29 @@ function CityDetailsPage() {
       <div className="custom-dropdown">
         <button
           className="dropdown-button"
-          onClick={() => setDropdownOpen(!dropdownOpen)}
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         >
-          {selectedType === 'all' ? 'Filter by type ▾' : selectedType + ' ▾'}
+          {selectedActivityType === 'all'
+            ? 'Filter by type ▾'
+            : selectedActivityType + ' ▾'}
         </button>
 
-        {dropdownOpen && (
+        {isDropdownOpen && (
           <ul className="dropdown-menu">
             <li
-              onClick={() => handleSelectType('all')}
-              className={selectedType === 'all' ? 'selected' : ''}
+              onClick={() => handleSelectActivityType('all')}
+              className={selectedActivityType === 'all' ? 'selected' : ''}
             >
               All
             </li>
-            {allKinds.map((kind) => (
+
+            {activityTypes.map((type) => (
               <li
-                key={kind}
-                onClick={() => handleSelectType(kind)}
-                className={selectedType === kind ? 'selected' : ''}
+                key={type}
+                onClick={() => handleSelectActivityType(type)}
+                className={selectedActivityType === type ? 'selected' : ''}
               >
-                {kind}
+                {type}
               </li>
             ))}
           </ul>
@@ -117,21 +135,30 @@ function CityDetailsPage() {
       </div>
 
       <ul className="activities-list">
-        {filteredActivities.slice(0, itemsToShow).map((act) => (
-          <li key={act.xid} className="activity-item">
-            <strong>{act.name}</strong> ({act.kind}) – Rate: {act.rate || 0}
+        {filteredActivities.slice(0, visibleActivitiesCount).map((activity) => (
+          <li key={activity.xid} className="activity-item">
+            <strong>{activity.name}</strong> ({activity.kind}) – Rate:{' '}
+            {activity.rate || 0}
             <span
               className="favorite-icon"
-              onClick={() => handleToggleFavorite(act)}
+              onClick={() => handleToggleFavorite(activity)}
             >
-              {isFavorited(act.xid) ? <FaHeart color="red" /> : <FaRegHeart />}
+              {isActivityFavorited(activity.xid) ? (
+                <FaHeart color="red" />
+              ) : (
+                <FaRegHeart />
+              )}
             </span>
           </li>
         ))}
       </ul>
 
-      {itemsToShow < filteredActivities.length && (
-        <button onClick={() => setItemsToShow((prev) => prev + 10)}>
+      {visibleActivitiesCount < filteredActivities.length && (
+        <button
+          onClick={() =>
+            setVisibleActivitiesCount((prevCount) => prevCount + 10)
+          }
+        >
           See more
         </button>
       )}

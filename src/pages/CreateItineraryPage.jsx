@@ -1,56 +1,86 @@
 // CreateItineraryPage.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import service from '../services/service.config';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import MapClickHandler from '../components/Map';
+import MapFlyTo from '../components/MapFlyTo';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
-// import '../pages/CreateItineraryPage.css';
+import RequiredFieldModal from '../components/RequiredFieldModal';
 
 function CreateItineraryPage() {
-  const navigate = useNavigate();
-  const mapRef = useRef(null);
+  const location = useLocation();
+  const editId = location.state?.editId || null;
 
+  //* -----------------------------
+  //* STATE VARIABLES
+  //* -----------------------------
   const [title, setTitle] = useState('');
   const [points, setPoints] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [addedFromFavorites, setAddedFromFavorites] = useState([]);
+  const [hiddenFavorites, setHiddenFavorites] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchedPosition, setSearchedPosition] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
 
-  //* Load points from localStorage to persist on refresh
+  //* load fav from api & localStorage
   useEffect(() => {
-    const savedPoints = JSON.parse(localStorage.getItem('itineraryPoints'));
-    if (savedPoints) setPoints(savedPoints);
-  }, []);
-
-  //* Save points to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('itineraryPoints', JSON.stringify(points));
-  }, [points]);
-
-  //* Fetch user's favorites from backend
-  useEffect(() => {
-    async function fetchFavorites() {
+    const fetchFavorites = async () => {
       try {
         const res = await service.get('/users/favorites');
         setFavorites(res.data || []);
       } catch (err) {
         console.error('Error fetching favorites', err);
-        setFavorites([]);
       }
-    }
+    };
     fetchFavorites();
+
+    const storedHidden =
+      JSON.parse(localStorage.getItem('hiddenFavorites')) || [];
+    setHiddenFavorites(storedHidden);
+
+    const storedAdded =
+      JSON.parse(localStorage.getItem('addedFavorites')) || [];
+    setAddedFromFavorites(storedAdded);
   }, []);
 
-  //* Handle click on map to add a point with reverse geocoding
+  //* load iti if editing
+  useEffect(() => {
+    const loadItinerary = async () => {
+      if (!editId) {
+        // new iti = clear everything
+        setTitle('');
+        setPoints([]);
+        setAddedFromFavorites([]);
+        localStorage.removeItem('itineraryPoints');
+        localStorage.removeItem('addedFavorites');
+        return;
+      }
+
+      try {
+        const res = await service.get(`/itineraries/${editId}`);
+        const iti = res.data;
+        setTitle(iti.title || '');
+        setPoints(iti.points || []);
+        setAddedFromFavorites(iti.favorites || []);
+      } catch (err) {
+        console.error('Error loading itinerary for editing', err);
+      }
+    };
+    loadItinerary();
+  }, [editId]);
+
+  //* MAP HANDLERS
+
   const handleAddMapPoint = async ({ lat, lng }) => {
     try {
-      // Reverse geocoding to get city/country
-      const res = await fetch(
+      const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
       );
-      const data = await res.json();
+      const data = await response.json();
       const city =
         data.address?.city ||
         data.address?.town ||
@@ -59,84 +89,111 @@ function CreateItineraryPage() {
       const country = data.address?.country || 'Unknown';
       const name = city !== 'Unknown' ? city : 'Custom location';
 
-      const newPoint = { name, city, country, lat, lng, comment: '' };
-      setPoints((prev) => [...prev, newPoint]);
+      setPoints((prev) => [
+        ...prev,
+        { name, city, country, lat, lng, comment: '' },
+      ]);
     } catch (err) {
-      console.error('Error reverse geocoding:', err);
-      // fallback if geocoding fails
-      const newPoint = {
-        name: 'Custom location',
-        city: 'Unknown',
-        country: 'Unknown',
-        lat,
-        lng,
-        comment: '',
-      };
-      setPoints((prev) => [...prev, newPoint]);
+      console.error('Reverse geocoding failed', err);
+      setPoints((prev) => [
+        ...prev,
+        {
+          name: 'Custom location',
+          city: 'Unknown',
+          country: 'Unknown',
+          lat,
+          lng,
+          comment: '',
+        },
+      ]);
     }
   };
 
-  //* Remove point from itinerary
-  const handleRemovePoint = (index) => {
+  const handleRemovePoint = (index) =>
     setPoints((prev) => prev.filter((_, i) => i !== index));
-  };
 
-  //* Add favorite to itinerary
   const handleAddFavoriteToItinerary = (fav) => {
-    const newPoint = {
-      name: fav.name,
-      city: fav.city,
-      country: fav.country,
-      lat: fav.lat || null,
-      lng: fav.lng || null,
-      comment: '',
-    };
-    setPoints((prev) => [...prev, newPoint]);
+    setPoints((prev) => [
+      ...prev,
+      {
+        name: fav.name,
+        city: fav.city,
+        country: fav.country,
+        lat: fav.lat || null,
+        lng: fav.lng || null,
+        comment: '',
+      },
+    ]);
   };
 
-  //* Search country/city and recenter map
+  const handleHideFavorite = (favId) => {
+    const updated = [...hiddenFavorites, favId];
+    setHiddenFavorites(updated);
+    localStorage.setItem('hiddenFavorites', JSON.stringify(updated));
+  };
+
+  const handleRemoveAddedFavorite = (idx) => {
+    const updated = addedFromFavorites.filter((_, i) => i !== idx);
+    setAddedFromFavorites(updated);
+    localStorage.setItem('addedFavorites', JSON.stringify(updated));
+  };
+
   const handleSearch = async () => {
     if (!searchQuery) return;
-
-    const provider = new OpenStreetMapProvider();
-    const results = await provider.search({ query: searchQuery, limit: 1 });
-
-    if (results && results.length > 0) {
-      const { x: lng, y: lat } = results[0];
-
-      // Fly map to searched location
-      if (mapRef.current) {
-        mapRef.current.flyTo([lat, lng], 6); // zoom level 6
+    try {
+      const provider = new OpenStreetMapProvider();
+      const results = await provider.search({ query: searchQuery });
+      if (results.length > 0) {
+        const { x: lng, y: lat } = results[0];
+        setSearchedPosition([lat, lng]);
       }
+    } catch (err) {
+      console.error('Search error', err);
     }
   };
 
-  //* Submit itinerary
+  //* submit iti
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!title) {
+      setIsTitleModalOpen(true);
+      return;
+    }
+
+    const body = { title, points };
+
     try {
-      if (!title) {
-        setErrorMessage('Please enter a title for your itinerary');
-        return;
+      if (editId) {
+        await service.put(`/itineraries/${editId}`, body);
+        alert('Itinerary updated successfully!');
+      } else {
+        await service.post('/itineraries', body);
+        alert('Itinerary created successfully!');
       }
 
-      const body = { title, points };
-      const response = await service.post('/itineraries', body);
-      console.log('Itinerary created:', response.data);
+      //* clear localStorage after save
+      localStorage.removeItem('itineraryPoints');
+      localStorage.removeItem('addedFavorites');
 
-      localStorage.removeItem('itineraryPoints'); // clear saved points
-      navigate('/my-itineraries');
-    } catch (error) {
-      console.log(error);
+      // Stay on page → reset form if it was a new itinerary
+      if (!editId) {
+        setTitle('');
+        setPoints([]);
+        setAddedFromFavorites([]);
+      }
+    } catch (err) {
+      console.error(err);
       setErrorMessage(
-        error.response?.data?.errorMessage || 'Something went wrong',
+        err.response?.data?.errorMessage || 'Something went wrong',
       );
     }
   };
 
   return (
     <div className="create-itinerary-page">
-      <h1>Create New Itinerary</h1>
+      <h1>{editId ? 'Edit Itinerary' : 'Create New Itinerary'}</h1>
+
       <form onSubmit={handleSubmit}>
         <label>Title:</label>
         <input
@@ -145,7 +202,7 @@ function CreateItineraryPage() {
           onChange={(e) => setTitle(e.target.value)}
         />
 
-        {/* Search bar */}
+        {/* SEARCH BAR */}
         <div className="search-container">
           <input
             type="text"
@@ -158,45 +215,43 @@ function CreateItineraryPage() {
           </button>
         </div>
 
-        {/* Map */}
+        {/* MAP */}
         <MapContainer
           center={[48.8566, 2.3522]}
           zoom={5}
           style={{ height: '400px', width: '100%' }}
-          whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
         >
           <TileLayer
-            attribution="© OpenStreetMap"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="© OpenStreetMap"
           />
-
-          {/* Handle map clicks */}
+          <MapFlyTo position={searchedPosition} />
           <MapClickHandler onAddPoint={handleAddMapPoint} />
-
-          {/* Render markers */}
           {points
             .filter((p) => p.lat && p.lng)
-            .map((point, index) => (
-              <Marker key={index} position={[point.lat, point.lng]}>
+            .map((p, idx) => (
+              <Marker key={idx} position={[p.lat, p.lng]}>
                 <Popup>
-                  {point.name} <br />
-                  {point.city}, {point.country} <br />
-                  {point.comment}
+                  {p.name}
+                  <br />
+                  {p.city}, {p.country}
+                  <br />
+                  {p.comment}
                 </Popup>
               </Marker>
             ))}
         </MapContainer>
 
-        {/* List of points */}
+        {/* ITINERARY POINTS */}
         <h2>Itinerary Points</h2>
         {points.length === 0 ? (
           <p>No points added yet.</p>
         ) : (
           <ul>
-            {points.map((point, index) => (
-              <li key={index}>
-                {point.name} ({point.city}, {point.country})
-                <button type="button" onClick={() => handleRemovePoint(index)}>
+            {points.map((p, idx) => (
+              <li key={idx}>
+                {p.name} ({p.city}, {p.country})
+                <button type="button" onClick={() => handleRemovePoint(idx)}>
                   Remove
                 </button>
               </li>
@@ -204,14 +259,15 @@ function CreateItineraryPage() {
           </ul>
         )}
 
-        {/* Favorites */}
+        {/* FAVORITES */}
         <h2>Your Favorites</h2>
-        {favorites.length === 0 ? (
-          <p>No favorites yet.</p>
-        ) : (
-          <ul>
-            {favorites.map((fav, index) => (
-              <li key={index}>
+
+        {/* Backend favorites */}
+        <ul>
+          {favorites
+            .filter((f) => !hiddenFavorites.includes(f._id))
+            .map((fav) => (
+              <li key={fav._id}>
                 {fav.name} ({fav.city}, {fav.country})
                 <button
                   type="button"
@@ -219,14 +275,48 @@ function CreateItineraryPage() {
                 >
                   Add to Itinerary
                 </button>
+                <button
+                  type="button"
+                  onClick={() => handleHideFavorite(fav._id)}
+                >
+                  Remove
+                </button>
               </li>
             ))}
-          </ul>
-        )}
+        </ul>
 
-        <button type="submit">Create Itinerary</button>
+        {/* Added from FavoritePage */}
+        <ul>
+          {addedFromFavorites.map((fav, idx) => (
+            <li key={fav.name + idx}>
+              {fav.name} ({fav.city}, {fav.country})
+              <button
+                type="button"
+                onClick={() => handleAddFavoriteToItinerary(fav)}
+              >
+                Add to Itinerary
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRemoveAddedFavorite(idx)}
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <button type="submit">
+          {editId ? 'Update Itinerary' : 'Create Itinerary'}
+        </button>
         {errorMessage && <p className="error">{errorMessage}</p>}
       </form>
+
+      <RequiredFieldModal
+        isOpen={isTitleModalOpen}
+        message="Title required to create a new itinerary"
+        onClose={() => setIsTitleModalOpen(false)}
+      />
     </div>
   );
 }

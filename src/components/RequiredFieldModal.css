@@ -1,0 +1,8 @@
+.modal {
+  background: var(--bg-light);
+  padding: 20px;
+  border-radius: 10px;
+}
+.modal p {
+  color: var(--border);
+}

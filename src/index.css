@@ -69,3 +69,6 @@ button:hover {
 p {
   color: var(--bg-light);
 }
+.leaflet-container {
+  z-index: 0;
+}

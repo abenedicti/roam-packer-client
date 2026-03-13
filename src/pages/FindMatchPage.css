@@ -1,81 +1,115 @@
 .find-match-page {
   padding: 20px;
   display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
 }
+
 .find-match-page form {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  gap: 10px;
+  max-width: 300px;
+  width: 100%;
 }
+
 .find-match-page form input {
-  width: 200px;
-  height: 20px;
-  border-radius: 5px;
+  width: 100%;
+  height: 35px;
+  border-radius: 6px;
   border: none;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  padding: 8px 10px;
 }
+
 .form-container label {
   color: var(--btnAndLinks);
 }
+
 .form-container button {
   width: 100%;
 }
+
 .form-container input[type='checkbox'] {
   accent-color: var(--btnAndLinks);
 }
-.match-card {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
+
 .matches-container {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 700px;
+}
+
+.match-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
 }
 
 .card {
   border: 2px solid var(--border);
   background: var(--btnAndLinks);
   border-radius: 10px;
-  padding: 10px;
-  width: 180px;
+  padding: 12px;
   text-align: center;
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
 }
+
+.card:hover {
+  transform: scale(1.05);
+  border: 2px solid var(--bg-light);
+}
+
 .card h3 {
   min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.card:hover {
-  transform: scale(1.05);
-  border: 2px solid var(--bg-light);
-}
+
 .card p {
-  margin: 0;
+  margin: 4px 0;
   text-align: left;
+  font-size: 0.9rem;
+  word-break: break-word;
 }
 
 .match-card button {
   margin-top: 10px;
-  padding: 5px 10px;
+  padding: 6px 10px;
   cursor: pointer;
   border: 1px solid var(--hover);
 }
+
 .match-card button:hover {
   border: 1px solid var(--bg-light);
   background: var(--bg-section);
 }
-@media (max-width: 790px) {
+
+@media (max-width: 900px) {
   .find-match-page {
     flex-direction: column;
     align-items: center;
+  }
+
+  .matches-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 790px) {
+  .match-card {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    width: 100%;
+  }
+
+  .find-match-page {
+    padding: 15px;
   }
 }

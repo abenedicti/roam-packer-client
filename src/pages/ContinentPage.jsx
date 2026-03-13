@@ -26,7 +26,7 @@ function ContinentPage() {
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="destinations">
+    <div className="destinations continent">
       <h1>Destinations</h1>
       <ul>
         {continents.map((c) => (

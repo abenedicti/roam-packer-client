@@ -65,7 +65,6 @@ function MatchPage() {
           loop={true}
           className="spinner"
         />
-        <p>Loading matches...</p>
       </div>
     );
   }

@@ -1,7 +1,6 @@
 import { createContext, useEffect, useState } from 'react';
 import service from '../services/service.config';
-import LoadingSpinner from '../components/LoadingSpinner'; // ⭐ import du spinner
-
+import LoadingSpinner from '../components/LoadingSpinner';
 const AuthContext = createContext();
 
 function AuthWrapper({ children }) {
@@ -47,7 +46,6 @@ function AuthWrapper({ children }) {
     return (
       <div className="spinner-container">
         <LoadingSpinner />
-        <p>Authenticating...</p>
       </div>
     );
   }

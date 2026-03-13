@@ -7,7 +7,6 @@ function Navbar() {
   const { isLoggedIn, logout } = useContext(AuthContext);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  //* separate state for each dropdown
   const [isItinerariesOpen, setItinerariesOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
 
@@ -15,7 +14,6 @@ function Navbar() {
     setMenuOpen(!menuOpen);
   };
 
-  //* to close dropdowns when clicking on submenu
   const handleLinkClick = () => {
     setItinerariesOpen(false);
     setProfileOpen(false);
@@ -63,7 +61,6 @@ function Navbar() {
           </Link>
         </li>
 
-        {/* Itineraries visible for everyone */}
         <li className={`dropdown ${isItinerariesOpen ? 'open' : ''}`}>
           <span onClick={toggleItineraries}>Itineraries ▾</span>
           <ul className="submenu">
@@ -86,7 +83,6 @@ function Navbar() {
           </ul>
         </li>
 
-        {/* Profile visible for everyone */}
         <li className={`dropdown ${isProfileOpen ? 'open' : ''}`}>
           <span onClick={toggleProfile}>Profile ▾</span>
           <ul className="submenu">

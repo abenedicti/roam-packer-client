@@ -1,5 +1,8 @@
 import { useEffect, useState, useContext, useRef, useMemo } from 'react';
 import { AuthContext } from '../context/Auth.context';
+import { FaTrash } from 'react-icons/fa';
+import DeleteModal from '../components/DeleteModal';
+import LoadingSpinner from '../components/LoadingSpinner';
 import '../pages/MessagePage.css';
 
 function MessagePage() {
@@ -8,9 +11,13 @@ function MessagePage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState('');
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const messagesEndRef = useRef(null);
 
-  //* Helper pour stocker les messages
   const appendMessageToStorage = (msg) => {
     const stored = JSON.parse(localStorage.getItem('messages')) || [];
     const updated = [...stored, msg];
@@ -18,11 +25,12 @@ function MessagePage() {
     return updated;
   };
 
-  //* Load messages initial & mise à jour via event
   useEffect(() => {
     const fetchMessages = () => {
+      setIsLoading(true);
       const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
       setMessages(storedMessages);
+      setIsLoading(false);
     };
 
     fetchMessages();
@@ -30,7 +38,6 @@ function MessagePage() {
     return () => window.removeEventListener('messagesUpdated', fetchMessages);
   }, []);
 
-  //* Conversations uniques
   const uniqueUsers = useMemo(() => {
     return Array.from(
       new Map(
@@ -46,7 +53,6 @@ function MessagePage() {
     );
   }, [messages, loggedUserId]);
 
-  //* Conversation active
   const currentConversation = selectedUser
     ? messages.filter(
         (msg) =>
@@ -57,7 +63,6 @@ function MessagePage() {
       )
     : [];
 
-  //* Auto-scroll sur le dernier message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, selectedUser]);
@@ -76,7 +81,7 @@ function MessagePage() {
     setMessages(updated);
     setMessageText('');
 
-    //* Fake match answer
+    //* Fake answer
     setTimeout(() => {
       const fakeResponse = {
         sender: { _id: selectedUser._id, username: selectedUser.username },
@@ -84,12 +89,12 @@ function MessagePage() {
         text: 'All good here! What about you?',
         createdAt: new Date(),
       };
+
       const updatedWithFake = appendMessageToStorage(fakeResponse);
       setMessages(updatedWithFake);
     }, 1500);
   };
 
-  //* Envoi avec Enter
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -97,31 +102,79 @@ function MessagePage() {
     }
   };
 
+  const handleDeleteConversation = (userId) => {
+    setIsDeleting(true);
+    const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
+
+    const updatedMessages = storedMessages.filter(
+      (msg) =>
+        !(
+          (msg.sender._id === userId && msg.receiver._id === loggedUserId) ||
+          (msg.sender._id === loggedUserId && msg.receiver._id === userId)
+        ),
+    );
+
+    localStorage.setItem('messages', JSON.stringify(updatedMessages));
+    setMessages(updatedMessages);
+
+    if (selectedUser?._id === userId) {
+      setSelectedUser(null);
+    }
+    setIsDeleting(false);
+  };
+
+  const openDeleteModal = (user) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteConversation = () => {
+    if (!userToDelete) return;
+
+    handleDeleteConversation(userToDelete._id);
+
+    setIsDeleteModalOpen(false);
+    setUserToDelete(null);
+  };
+
+  if (isLoading || isDeleting) return <LoadingSpinner />;
+
   return (
-    <div className="message-page">
-      <div className="sidebar">
+    <div className="message-page modern">
+      <div className="sidebar modern-sidebar">
         <h2>Conversations</h2>
+
         {uniqueUsers.length === 0 && <p>No conversations yet</p>}
+
         {uniqueUsers.map((user) => (
           <div
             key={user._id}
-            className={`user-item ${selectedUser?._id === user._id ? 'active' : ''}`}
-            onClick={() => setSelectedUser(user)}
+            className={`user-item modern-user-item ${
+              selectedUser?._id === user._id ? 'active' : ''
+            }`}
           >
-            {user.username}
+            <span onClick={() => setSelectedUser(user)}>{user.username}</span>
+
+            <FaTrash
+              className="delete-icon"
+              onClick={() => openDeleteModal(user)}
+            />
           </div>
         ))}
       </div>
 
-      <div className="chat-window">
+      <div className="chat-window modern-chat">
         {selectedUser ? (
           <>
             <h3>Chat with {selectedUser.username}</h3>
-            <div className="messages">
+
+            <div className="messages modern-messages">
               {currentConversation.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`message ${msg.sender._id === loggedUserId ? 'sent' : 'received'}`}
+                  className={`message modern-message ${
+                    msg.sender._id === loggedUserId ? 'sent' : 'received'
+                  }`}
                 >
                   <p>{msg.text}</p>
                   <span className="time">
@@ -135,7 +188,7 @@ function MessagePage() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="message-input">
+            <div className="message-input modern-input">
               <input
                 type="text"
                 placeholder="Type your message..."
@@ -147,9 +200,27 @@ function MessagePage() {
             </div>
           </>
         ) : (
-          <p>Select a conversation to start chatting</p>
+          <p className="select-prompt">
+            Select a conversation to start chatting
+          </p>
         )}
       </div>
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        title="Delete conversation"
+        onClose={() => setIsDeleteModalOpen(false)}
+      >
+        <p>
+          Are you sure you want to delete the conversation with{' '}
+          <strong>{userToDelete?.username}</strong>?
+        </p>
+
+        <div className="delete-modal-actions">
+          <button onClick={confirmDeleteConversation}>Delete</button>
+          <button onClick={() => setIsDeleteModalOpen(false)}>Cancel</button>
+        </div>
+      </DeleteModal>
     </div>
   );
 }

@@ -8,7 +8,9 @@ function FindMatchPage() {
   const [foundMatches, setFoundMatches] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMatch, setModalMatch] = useState(null);
+
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
 
   const [criteria, setCriteria] = useState({
     budget: '',
@@ -54,11 +56,13 @@ function FindMatchPage() {
   const handleSaveMatch = async (match) => {
     try {
       await service.post('/matches/save', { match });
-      setModalMatch(match);
+      setNotifTitle('Match saved!');
+      setNotifMessage(`You matched with ${match.username}!`);
       setModalOpen(true);
     } catch (err) {
       console.error('Error saving match:', err);
-      setModalMatch({ username: 'Failed to save match' });
+      setNotifTitle('Error');
+      setNotifMessage('Failed to save match');
       setModalOpen(true);
     }
   };
@@ -196,11 +200,13 @@ function FindMatchPage() {
         </div>
 
         <NotificationModal
-          match={modalMatch}
           isOpen={modalOpen}
+          title={notifTitle}
+          message={notifMessage}
           onClose={() => {
             setModalOpen(false);
-            setModalMatch(null);
+            setNotifTitle('');
+            setNotifMessage('');
           }}
         />
       </div>

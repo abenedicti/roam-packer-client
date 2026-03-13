@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import service from '../services/service.config';
 import LoadingSpinner from '../components/LoadingSpinner';
+import '../pages/FavoritePage.css';
 
 function FavoritePage() {
   const [favorites, setFavorites] = useState([]);

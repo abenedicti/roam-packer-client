@@ -13,7 +13,6 @@ function MessageModal({ match, isOpen, onClose, onMessageSent }) {
     setSending(true);
 
     try {
-      // Envoie le message vers le backend
       await service.post('/messages', {
         receiverId: match._id,
         text: message,
@@ -23,10 +22,10 @@ function MessageModal({ match, isOpen, onClose, onMessageSent }) {
       setMessage('');
       onClose();
 
-      // Optionnel : tu peux stocker localement pour refresh immédiat
+      //* store with refresh
       const oldMessages = JSON.parse(localStorage.getItem('messages')) || [];
       const newMessage = {
-        sender: { _id: 'me', username: 'You' }, // ID temporaire
+        sender: { _id: 'me', username: 'You' },
         receiver: match,
         text: message,
         createdAt: new Date(),

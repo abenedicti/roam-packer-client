@@ -4,17 +4,16 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* fond sombre transparent */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* au-dessus de tout */
+  z-index: 1000;
   animation: fadeIn 0.3s ease;
 }
 
-/* Conteneur de la modal */
 .notif-modal-container {
-  background-color: #fff; /* fond blanc */
+  background-color: #fff;
   padding: 20px 30px;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -24,20 +23,17 @@
   animation: slideIn 0.3s ease;
 }
 
-/* Titre */
 .notif-modal-container h2 {
   margin-bottom: 15px;
   color: #333;
 }
 
-/* Message */
 .notif-modal-container p {
   margin-bottom: 20px;
   color: #555;
   font-size: 1rem;
 }
 
-/* Bouton de fermeture */
 .modal-close-btn {
   padding: 8px 16px;
   border: none;
@@ -58,7 +54,6 @@
   border: none;
 }
 
-/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;

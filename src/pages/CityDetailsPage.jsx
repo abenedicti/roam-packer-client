@@ -15,14 +15,11 @@ function CityDetailsPage() {
 
   const [selectedActivityType, setSelectedActivityType] = useState('all');
 
-  //* loading state while fetching API data
   const [isLoading, setIsLoading] = useState(true);
 
-  //* controls dropdown visibility
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userFavorites, setUserFavorites] = useState([]);
 
-  //* fetch activities and favorites when the page loads
   useEffect(() => {
     async function fetchCityData() {
       setIsLoading(true);
@@ -59,7 +56,6 @@ function CityDetailsPage() {
     fetchCityData();
   }, [cityName]);
 
-  //* extract all activity categories (kinds) from the activities list
   const activityTypes = Array.from(
     new Set(cityActivities.flatMap((activity) => activity.kind.split(','))),
   );
@@ -76,7 +72,7 @@ function CityDetailsPage() {
   const handleSelectActivityType = (type) => {
     setSelectedActivityType(type);
     setIsDropdownOpen(false);
-    setVisibleActivitiesCount(10); //* reset number of displayed activities
+    setVisibleActivitiesCount(10);
   };
 
   //* add or remove an activity from favorites

@@ -19,96 +19,101 @@ import ItineraryDetailsPage from './pages/ItineraryDetailsPage';
 import Navbar from './components/Navbar';
 import './App.css';
 import CityDetailsPage from './pages/CityDetailsPage';
+import './utils/fixLeafletIcon';
+import Footer from './components/Footer';
 
 function App() {
   return (
     <AuthWrapper>
       <Navbar />
-      <Routes>
-        {/* Public routes */}
+      <main style={{ flex: 1 }}>
+        <Routes>
+          {/* Public routes */}
 
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/destinations" element={<ContinentPage />} />
-        <Route
-          path="/destinations/:continent/countries"
-          element={<CountryPage />}
-        />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/destinations" element={<ContinentPage />} />
+          <Route
+            path="/destinations/:continent/countries"
+            element={<CountryPage />}
+          />
 
-        <Route path="/destinations/country/:country" element={<CityPage />} />
-        <Route
-          path="/destinations/city/:cityName"
-          element={<CityDetailsPage />}
-        />
+          <Route path="/destinations/country/:country" element={<CityPage />} />
+          <Route
+            path="/destinations/city/:cityName"
+            element={<CityDetailsPage />}
+          />
 
-        {/* Private routes */}
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <ProfilePage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/favorites"
-          element={
-            <PrivateRoute>
-              <FavoritePage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/find-match"
-          element={
-            <PrivateRoute>
-              <FindMatchPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/matches"
-          element={
-            <PrivateRoute>
-              <MatchPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/messages"
-          element={
-            <PrivateRoute>
-              <MessagePage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/create-itinerary"
-          element={
-            <PrivateRoute>
-              <CreateItineraryPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/my-itineraries"
-          element={
-            <PrivateRoute>
-              <ItinerariesPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/itinerary/:itineraryId"
-          element={
-            <PrivateRoute>
-              <ItineraryDetailsPage />
-            </PrivateRoute>
-          }
-        />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+          {/* Private routes */}
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <ProfilePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <PrivateRoute>
+                <FavoritePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/find-match"
+            element={
+              <PrivateRoute>
+                <FindMatchPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/matches"
+            element={
+              <PrivateRoute>
+                <MatchPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <PrivateRoute>
+                <MessagePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/create-itinerary"
+            element={
+              <PrivateRoute>
+                <CreateItineraryPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/my-itineraries"
+            element={
+              <PrivateRoute>
+                <ItinerariesPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/itinerary/:itineraryId"
+            element={
+              <PrivateRoute>
+                <ItineraryDetailsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </main>
+      <Footer />
     </AuthWrapper>
   );
 }

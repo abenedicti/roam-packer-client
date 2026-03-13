@@ -8,6 +8,8 @@ import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
 import RequiredFieldModal from '../components/RequiredFieldModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import NotificationModal from '../components/NotificationModal';
+import '../pages/CreateItineraryPage.css';
 
 function CreateItineraryPage() {
   const location = useLocation();
@@ -22,7 +24,10 @@ function CreateItineraryPage() {
   const [searchedPosition, setSearchedPosition] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // ⭐ spinner state
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
+  const [notifMessage, setNotifMessage] = useState('');
 
   //* load fav from api & localStorage
   useEffect(() => {
@@ -159,17 +164,19 @@ function CreateItineraryPage() {
     try {
       if (editId) {
         await service.put(`/itineraries/${editId}`, body);
-        alert('Itinerary updated successfully!');
+
+        setNotifMessage('Your itinerary has been updated successfully!');
+        setIsNotifModalOpen(true);
       } else {
         await service.post('/itineraries', body);
-        alert('Itinerary created successfully!');
+
+        setNotifMessage('Your itinerary has been created successfully!');
+        setIsNotifModalOpen(true);
       }
 
-      //* clear localStorage after save
       localStorage.removeItem('itineraryPoints');
       localStorage.removeItem('addedFavorites');
 
-      // Stay on page = reset form if it was a new itinerary
       if (!editId) {
         setTitle('');
         setPoints([]);
@@ -183,7 +190,6 @@ function CreateItineraryPage() {
     }
   };
 
-  //* ⭐ Spinner pendant chargement
   if (isLoading) return <LoadingSpinner />;
 
   return (
@@ -306,6 +312,12 @@ function CreateItineraryPage() {
         isOpen={isTitleModalOpen}
         message="Title required to create a new itinerary"
         onClose={() => setIsTitleModalOpen(false)}
+      />
+      <NotificationModal
+        isOpen={isNotifModalOpen}
+        title="Great !"
+        message={notifMessage}
+        onClose={() => setIsNotifModalOpen(false)}
       />
     </div>
   );

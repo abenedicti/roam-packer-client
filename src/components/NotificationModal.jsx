@@ -1,13 +1,14 @@
 import '../components/NotificationModal.css';
 
-function NotificationModal({ match, isOpen, onClose }) {
-  if (!isOpen || !match) return null; //* if not match
+function NotificationModal({ isOpen, title, message, onClose }) {
+  if (!isOpen) return null;
 
   return (
     <div className="notif-modal-overlay">
       <div className="notif-modal-container">
-        <h2>Match saved!</h2>
-        <p>{match.username}</p>
+        <h2>{title}</h2>
+        {message && <p>{message}</p>}
+
         <button className="modal-close-btn" onClick={onClose}>
           Close
         </button>

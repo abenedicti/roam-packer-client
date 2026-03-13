@@ -29,6 +29,9 @@
   align-items: center;
   gap: 10px;
 }
+.delete-modal-body p {
+  color: var(--border);
+}
 .delete-modal-body button {
   width: 50%;
 }

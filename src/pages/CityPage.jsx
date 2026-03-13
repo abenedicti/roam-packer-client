@@ -7,12 +7,11 @@ function CityPage() {
   //* fetch 'country' para from URL
   const { country } = useParams();
 
-  const [cities, setCities] = useState([]); //* List of cities fetched from BE
-  const [search, setSearch] = useState(''); //* user text to filter
-  const [itemsToShow, setItemsToShow] = useState(10); //* cities displayed
-  const [isLoading, setIsLoading] = useState(true); //* spinner state
+  const [cities, setCities] = useState([]);
+  const [search, setSearch] = useState('');
+  const [itemsToShow, setItemsToShow] = useState(10);
+  const [isLoading, setIsLoading] = useState(true);
 
-  //* fetch cities when loading
   useEffect(() => {
     const fetchCities = async () => {
       setIsLoading(true); //* start loading
@@ -23,7 +22,7 @@ function CityPage() {
         console.error(err);
         setCities([]); //* empty if error
       } finally {
-        setIsLoading(false); //* stop loading
+        setIsLoading(false);
       }
     };
     fetchCities();

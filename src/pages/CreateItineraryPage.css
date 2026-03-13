@@ -1,0 +1,15 @@
+.create-itinerary-page input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  width: 20%;
+  transition: all 0.3s ease;
+}
+
+.create-itinerary-page input:focus {
+  outline: none;
+  border-color: var(--btnAndLinks);
+  box-shadow: 0 0 5px var(--bg-section);
+}

@@ -1,16 +1,84 @@
-# React + Vite
+# Project Name
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## [RoamPacker](https://roam-packer-app.vercel.app/)
 
-Currently, two official plugins are available:
+## Description
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Meeting app for backpackers. Matching system, chat between saved matches and itinerary creation to plan the trip and share with a selected match.
 
-## React Compiler
+#### [Client Repo here](https://github.com/abenedicti/roam-packer-client)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+#### [Server Repo here](https://github.com/abenedicti/RoamPacker-server)
 
-## Expanding the ESLint configuration
+## Technologies & Libraries used
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+CSS, Javascript, React, axios, React Context, MongoDB, Lottie, RandomUser API, Leaflet, Cloudinary, OpenTripMap API, GeoNames API
+
+## Backlog Functionalities
+
+Share itinerary in real time, improvement of the chat system and add AI tool to build a trip
+
+# Client Structure
+
+## User Stories
+
+- **404** - As a user I want to see a nice 404 page when I go to a page that doesn’t exist so that I know it was my fault
+- **sign up** - As a user I want to sign up on the webpage to access to the main functionnalities of the app
+- **login** - As a user I want to be able to log in on the webpage so that I can get back to my account
+- **logout** - As a user I want to be able to log out from the webpage so that I can make sure no one will access my account
+- **homepage** - As a user I want to be able to access the homepage so that I see what the app is about, navbar displayed with the app functionnality and login
+- **destinations** - As a user I want to search and filter by continent, countries and cities and see all the activities related
+- **match** - As a user I want to fill a form to find a partner who has the same interests
+- **itinerary** - As a user I want to create an itinerary , update it and share it with my selected match
+- **favorites** - As a user I can add or remove some activities to my favorites and add them to the chosen itinerary
+
+## Client Routes
+
+## React Router Routes (React App)
+
+Public
+├─ / (Home)
+├─ /destinations
+└─ /login/signup
+|
+v
+Authenticated
+├─ /matches
+├─ /messages
+├─ /itineraries
+│ ├─ /create-itinerary
+│ └─ /my-itineraries
+└─ /profile
+├─ /profile
+└─ /favorites
+
+## Other Components
+
+- Navbar
+- Footer
+- Modals (DeleteModal, NotificationModal, RequiredFieldModal, MessageModal)
+- PrivateRoute
+- LoadingSpinner
+- Map
+- Logout
+
+## Services
+
+- Auth Service
+  - auth.login(user)
+  - auth.signup(user)
+  - auth.verify()
+
+- Backlog Service
+  - filter
+  - autocompletion
+  - required field
+
+- External API
+  - Randomuser API
+  - GeoNames API
+  - OpenTripMap API
+
+## Context
+
+- auth.context

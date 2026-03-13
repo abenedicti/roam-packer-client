@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import service from '../services/service.config';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
+import '../styles/auth.css';
 
 function Signup() {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ function Signup() {
         />
 
         <label>Password:</label>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div className="password-wrapper">
           <input
             type={showPassword ? 'text' : 'password'}
             name="password"
@@ -66,16 +67,14 @@ function Signup() {
             onChange={handlePasswordChange}
             required
           />
-          <button
-            type="button"
-            onClick={toggleShowPassword}
-            style={{ background: 'none', border: 'none', marginLeft: '0.5rem' }}
-          >
+          <button type="button" onClick={toggleShowPassword}>
             {showPassword ? <FiEyeOff /> : <FiEye />}
           </button>
         </div>
 
-        <button type="submit"></button>
+        <button type="submit" className="btn-submit">
+          Signup
+        </button>
 
         {errorMessage && <p className="error">{errorMessage}</p>}
       </form>

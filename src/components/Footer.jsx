@@ -1,4 +1,4 @@
-import githubEmoji from '../img/gitfooter.png';
+import githubEmoji from '../img/gitfooter.apng.png';
 import '../components/Footer.css';
 function Footer() {
   return (

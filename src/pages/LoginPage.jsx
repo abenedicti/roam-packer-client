@@ -2,7 +2,6 @@ import { useContext, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/Auth.context';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-import '../styles/auth.css';
 
 function Login() {
   const { login } = useContext(AuthContext);

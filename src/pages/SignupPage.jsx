@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import service from '../services/service.config';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-import '../styles/auth.css';
 
 function Signup() {
   const navigate = useNavigate();

@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from 'react';
 import service from '../services/service.config';
 import LoadingSpinner from '../components/LoadingSpinner';
+
 const AuthContext = createContext();
 
 function AuthWrapper({ children }) {
@@ -8,16 +9,24 @@ function AuthWrapper({ children }) {
   const [loggedUserId, setLoggedUserId] = useState(null);
   const [isAuthenticatingUser, setIsAuthenticatingUser] = useState(true);
 
-  //* check token when app is loading
+  // check the token when app is loading
   const authenticateUser = async () => {
+    const token = localStorage.getItem('authToken');
+
+    if (!token) {
+      setIsLoggedIn(false);
+      setLoggedUserId(null);
+      setIsAuthenticatingUser(false);
+      return;
+    }
+
     try {
       const response = await service.get('/auth/verify');
       console.log('Verify response:', response.data);
       setIsLoggedIn(true);
       setLoggedUserId(response.data.payload._id);
     } catch (error) {
-      console.log(error);
-
+      console.log('Token verification failed:', error);
       setIsLoggedIn(false);
       setLoggedUserId(null);
     } finally {
@@ -30,14 +39,20 @@ function AuthWrapper({ children }) {
   }, []);
 
   const login = async (loginData) => {
-    const response = await service.post('/auth/login', loginData);
-    localStorage.setItem('authToken', response.data.authToken);
-    setIsLoggedIn(true);
-    setLoggedUserId(response.data.payload._id);
+    try {
+      const response = await service.post('/auth/login', loginData);
+      console.log('Login response:', response.data);
+      localStorage.setItem('authToken', response.data.authToken);
+      setIsLoggedIn(true);
+      setLoggedUserId(response.data.payload._id);
+    } catch (error) {
+      console.log('Login error:', error.response?.data || error.message);
+      throw error; // allow form to manage error
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken'); // delete token
+    localStorage.removeItem('authToken');
     setIsLoggedIn(false);
     setLoggedUserId(null);
   };

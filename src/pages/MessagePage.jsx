@@ -3,6 +3,7 @@ import { AuthContext } from '../context/Auth.context';
 import { FaTrash } from 'react-icons/fa';
 import DeleteModal from '../components/DeleteModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import service from '../services/service.config';
 import '../pages/MessagePage.css';
 
 function MessagePage() {
@@ -10,34 +11,31 @@ function MessagePage() {
   const [messages, setMessages] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState('');
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
-
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const messagesEndRef = useRef(null);
 
-  const appendMessageToStorage = (msg) => {
-    const stored = JSON.parse(localStorage.getItem('messages')) || [];
-    const updated = [...stored, msg];
-    localStorage.setItem('messages', JSON.stringify(updated));
-    return updated;
+  //* Fetch all messages
+  const fetchMessages = async () => {
+    setIsLoading(true);
+    try {
+      const res = await service.get('/messages/conversations');
+      setMessages(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  //* Initial load
   useEffect(() => {
-    const fetchMessages = () => {
-      setIsLoading(true);
-      const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
-      setMessages(storedMessages);
-      setIsLoading(false);
-    };
-
     fetchMessages();
-    window.addEventListener('messagesUpdated', fetchMessages);
-    return () => window.removeEventListener('messagesUpdated', fetchMessages);
   }, []);
 
+  //* Unique users
   const uniqueUsers = useMemo(() => {
     return Array.from(
       new Map(
@@ -53,21 +51,25 @@ function MessagePage() {
     );
   }, [messages, loggedUserId]);
 
-  const currentConversation = selectedUser
-    ? messages.filter(
-        (msg) =>
-          (msg.sender._id === selectedUser._id &&
-            msg.receiver._id === loggedUserId) ||
-          (msg.sender._id === loggedUserId &&
-            msg.receiver._id === selectedUser._id),
-      )
-    : [];
+  //* Current conversation
+  const currentConversation = useMemo(() => {
+    if (!selectedUser) return [];
+    return messages.filter(
+      (msg) =>
+        (msg.sender._id === selectedUser._id &&
+          msg.receiver._id === loggedUserId) ||
+        (msg.sender._id === loggedUserId &&
+          msg.receiver._id === selectedUser._id),
+    );
+  }, [messages, selectedUser, loggedUserId]);
 
+  //* Scroll auto
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, selectedUser]);
+  }, [currentConversation]);
 
-  const handleSendMessage = () => {
+  //* Send message
+  const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedUser) return;
 
     const newMessage = {
@@ -77,22 +79,18 @@ function MessagePage() {
       createdAt: new Date(),
     };
 
-    const updated = appendMessageToStorage(newMessage);
-    setMessages(updated);
-    setMessageText('');
+    try {
+      await service.post('/messages', {
+        receiverId: selectedUser._id,
+        text: messageText,
+      });
 
-    //* Fake answer
-    setTimeout(() => {
-      const fakeResponse = {
-        sender: { _id: selectedUser._id, username: selectedUser.username },
-        receiver: { _id: loggedUserId, username: 'You' },
-        text: 'All good here! What about you?',
-        createdAt: new Date(),
-      };
-
-      const updatedWithFake = appendMessageToStorage(fakeResponse);
-      setMessages(updatedWithFake);
-    }, 1500);
+      //* instant update sender
+      setMessages((prev) => [...prev, newMessage]);
+      setMessageText('');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -102,25 +100,30 @@ function MessagePage() {
     }
   };
 
-  const handleDeleteConversation = (userId) => {
+  //* Delete conversation
+  const handleDeleteConversation = async (userId) => {
     setIsDeleting(true);
-    const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
 
-    const updatedMessages = storedMessages.filter(
-      (msg) =>
-        !(
-          (msg.sender._id === userId && msg.receiver._id === loggedUserId) ||
-          (msg.sender._id === loggedUserId && msg.receiver._id === userId)
+    try {
+      await service.delete(`/messages/conversation/${userId}`);
+
+      setMessages((prev) =>
+        prev.filter(
+          (msg) =>
+            !(
+              (msg.sender._id === userId &&
+                msg.receiver._id === loggedUserId) ||
+              (msg.sender._id === loggedUserId && msg.receiver._id === userId)
+            ),
         ),
-    );
+      );
 
-    localStorage.setItem('messages', JSON.stringify(updatedMessages));
-    setMessages(updatedMessages);
-
-    if (selectedUser?._id === userId) {
-      setSelectedUser(null);
+      if (selectedUser?._id === userId) setSelectedUser(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
     }
-    setIsDeleting(false);
   };
 
   const openDeleteModal = (user) => {
@@ -130,9 +133,7 @@ function MessagePage() {
 
   const confirmDeleteConversation = () => {
     if (!userToDelete) return;
-
     handleDeleteConversation(userToDelete._id);
-
     setIsDeleteModalOpen(false);
     setUserToDelete(null);
   };
@@ -143,7 +144,6 @@ function MessagePage() {
     <div className="message-page modern">
       <div className="sidebar modern-sidebar">
         <h2>Conversations</h2>
-
         {uniqueUsers.length === 0 && <p>No conversations yet</p>}
 
         {uniqueUsers.map((user) => (
@@ -167,6 +167,10 @@ function MessagePage() {
         {selectedUser ? (
           <>
             <h3>Chat with {selectedUser.username}</h3>
+
+            <button onClick={fetchMessages} style={{ marginBottom: '10px' }}>
+              Refresh conversation
+            </button>
 
             <div className="messages modern-messages">
               {currentConversation.map((msg, idx) => (

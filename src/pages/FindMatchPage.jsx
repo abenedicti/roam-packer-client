@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import service from '../services/service.config';
 import '../pages/FindMatchPage.css';
 import NotificationModal from '../components/NotificationModal.jsx';
@@ -6,6 +6,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 function FindMatchPage() {
   const [foundMatches, setFoundMatches] = useState([]);
+  const [savedMatches, setSavedMatches] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -23,6 +24,19 @@ function FindMatchPage() {
     firstTrip: false,
     partyMood: false,
   });
+
+  useEffect(() => {
+    // Fetch saved matches when the page loads
+    const fetchSavedMatches = async () => {
+      try {
+        const res = await service.get('/users/me'); // fetch connected user
+        setSavedMatches(res.data.savedMatchedUsers || []);
+      } catch (err) {
+        console.error('Error fetching saved matches:', err);
+      }
+    };
+    fetchSavedMatches();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -55,7 +69,18 @@ function FindMatchPage() {
 
   const handleSaveMatch = async (match) => {
     try {
-      await service.post('/matches/save', { match });
+      let res;
+      if (match.isFake) {
+        res = await service.post('/matches/save', { match });
+      } else {
+        res = await service.post(`/matches/save-real/${match._id}`, {
+          matchPercentage: match.matchPercentage,
+        });
+      }
+
+      // maj list
+      setSavedMatches(res.data);
+
       setNotifTitle('Match saved!');
       setNotifMessage(`You matched with ${match.username}!`);
       setModalOpen(true);
@@ -92,7 +117,7 @@ function FindMatchPage() {
               name="interests"
               value={criteria.interests}
               onChange={handleChange}
-              placeholder="Hicking, Chill, Museum"
+              placeholder="Hiking, Chill, Museum"
             />
           </label>
 
@@ -181,22 +206,36 @@ function FindMatchPage() {
         <h1>Matches Found</h1>
         {foundMatches.length === 0 && <p>No matches yet</p>}
         <div className="match-card">
-          {foundMatches.map((match) => (
-            <div className="card" key={match._id}>
-              <img src={match.photoUrl} alt={match.username} />
-              <p>
-                <strong>{match.username}</strong>
-              </p>
-              <p>Match: {match.matchPercentage}%</p>
-              <p>Budget: {match.budget} €</p>
-              <p>Interests: {match.interests.join(', ')}</p>
-              <p>Travel Style: {match.travelStyle}</p>
-              <p>Trip Duration: {match.tripDuration} days</p>
-              <p>Favorite Food: {match.favoriteFood}</p>
-              <p>Preferred Country: {match.preferredCountry}</p>
-              <button onClick={() => handleSaveMatch(match)}>Save Match</button>
-            </div>
-          ))}
+          {foundMatches.map((match) => {
+            const isAlreadySaved = savedMatches.some(
+              (saved) => saved._id === match._id,
+            );
+            return (
+              <div className="card" key={match._id}>
+                <img
+                  src={match.photoUrl}
+                  alt={match.username}
+                  className="match-photo"
+                />
+                <p>
+                  <strong>{match.username}</strong>
+                </p>
+                <p>Match: {match.matchPercentage}%</p>
+                <p>Budget: {match.budget} €</p>
+                <p>Interests: {match.interests.join(', ')}</p>
+                <p>Travel Style: {match.travelStyle}</p>
+                <p>Trip Duration: {match.tripDuration} days</p>
+                <p>Favorite Food: {match.favoriteFood}</p>
+                <p>Preferred Country: {match.preferredCountry}</p>
+                <button
+                  onClick={() => handleSaveMatch(match)}
+                  disabled={isAlreadySaved}
+                >
+                  {isAlreadySaved ? 'Saved' : 'Save Match'}
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         <NotificationModal

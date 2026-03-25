@@ -103,7 +103,7 @@ function CityDetailsPage() {
   if (isLoading) return <LoadingSpinner />;
 
   if (!isLoading && cityActivities.length === 0)
-    return <p>No activities found for {cityName}.</p>;
+    return <p> Please login to see all activitites in {cityName}.</p>;
 
   return (
     <div>

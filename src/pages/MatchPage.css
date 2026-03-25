@@ -6,13 +6,6 @@
   flex-wrap: wrap;
 }
 
-.match-photo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 .message-btn {
   margin-top: 10px;
   padding: 8px 14px;

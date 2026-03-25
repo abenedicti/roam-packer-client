@@ -25,6 +25,7 @@ function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  //* fetch user profile
   useEffect(() => {
     const fetchProfile = async () => {
       if (!loggedUserId) return;
@@ -52,6 +53,7 @@ function ProfilePage() {
     setCriteria((prev) => ({ ...prev, [name]: value }));
   };
 
+  //* Upload Cloudinary and update DB
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -62,25 +64,33 @@ function ProfilePage() {
     formData.append('upload_preset', 'profile_unsigned');
 
     try {
-      const res = await fetch(
+      const resCloud = await fetch(
         'https://api.cloudinary.com/v1_1/dlsfa7b0k/image/upload',
         { method: 'POST', body: formData },
       );
-      const data = await res.json();
-      setCriteria((prev) => ({ ...prev, photoUrl: data.secure_url }));
+      const data = await resCloud.json();
+      const photoUrl = data.secure_url;
+
+      //* send to backend to stay in DB
+      const res = await service.put(`/users/${loggedUserId}`, { photoUrl });
+
+      //* update after backend confirmation
+      setCriteria((prev) => ({ ...prev, photoUrl: res.data.photoUrl }));
     } catch (err) {
-      console.error(err);
+      console.error('Upload error:', err);
     } finally {
       setUploading(false);
     }
   };
 
+  //* save the rest of the profile
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await service.put(`/users/${loggedUserId}`, criteria);
+      const res = await service.put(`/users/${loggedUserId}`, criteria);
       setEditMode(false);
-      setUserProfile({ ...criteria });
+      setUserProfile(res.data);
+      setCriteria((prev) => ({ ...prev, photoUrl: res.data.photoUrl }));
       alert('Profile saved!');
     } catch (err) {
       console.error(err);
@@ -114,9 +124,22 @@ function ProfilePage() {
                 </label>
                 <button
                   type="button"
-                  onClick={() =>
-                    setCriteria((prev) => ({ ...prev, photoUrl: '' }))
-                  }
+                  onClick={async () => {
+                    setUploading(true);
+                    try {
+                      const res = await service.put(`/users/${loggedUserId}`, {
+                        photoUrl: '',
+                      });
+                      setCriteria((prev) => ({
+                        ...prev,
+                        photoUrl: res.data.photoUrl,
+                      }));
+                    } catch (err) {
+                      console.error('Error removing photo:', err);
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
                 >
                   Remove
                 </button>

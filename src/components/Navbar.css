@@ -1,19 +1,19 @@
 .navbar {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
   background: var(--btnAndLinks);
   position: relative;
   color: var(--bg-light);
   font-family: Arial, sans-serif;
   z-index: 1000;
-  border-radius: 10px;
+  border-radius: 10px 10px 0 0;
+  height: 55px;
 }
 .logo {
   height: 1em;
   padding: 1.7em;
   position: absolute;
-  top: -15px;
+  top: -10px;
   left: -10px;
   color: white;
   z-index: 2;

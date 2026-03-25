@@ -24,6 +24,7 @@ function MatchPage() {
   const [matchToDelete, setMatchToDelete] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
+  //* Fetch saved matches
   useEffect(() => {
     const fetchSavedMatches = async () => {
       if (!loggedUserId) return;
@@ -40,6 +41,7 @@ function MatchPage() {
     fetchSavedMatches();
   }, [loggedUserId]);
 
+  //* Delete match
   const confirmDeleteMatch = (matchId) => {
     setMatchToDelete(matchId);
     setDeleteModalOpen(true);
@@ -98,6 +100,7 @@ function MatchPage() {
                   className="match-photo"
                 />
                 <h3>{match.username}</h3>
+
                 <p>
                   <strong>Match:</strong> {match.matchPercentage}%
                 </p>
@@ -143,29 +146,18 @@ function MatchPage() {
             setMessageModalOpen(false);
             setSelectedMatch(null);
           }}
-          onMessageSent={(newMessage) => {
-            const stored = JSON.parse(localStorage.getItem('messages')) || [];
-            const updated = [
-              ...stored,
-              { ...newMessage, sender: { _id: loggedUserId, username: 'You' } },
-            ];
-            localStorage.setItem('messages', JSON.stringify(updated));
-            window.dispatchEvent(new Event('messagesUpdated'));
+          onMessageSent={async (newMessage) => {
+            try {
+              await service.post('/messages', {
+                receiverId: selectedMatch._id,
+                text: newMessage.text,
+              });
 
-            setNotificationOpen(true);
-            setTimeout(() => setNotificationOpen(false), 2000);
-
-            setTimeout(() => {
-              const fakeResponse = {
-                sender: newMessage.receiver,
-                receiver: { _id: loggedUserId, username: 'You' },
-                text: 'Hello! Thanks for your message 😄',
-                createdAt: new Date(),
-              };
-              const updatedWithFake = [...updated, fakeResponse];
-              localStorage.setItem('messages', JSON.stringify(updatedWithFake));
-              window.dispatchEvent(new Event('messagesUpdated'));
-            }, 1500);
+              setNotificationOpen(true);
+              setTimeout(() => setNotificationOpen(false), 2000);
+            } catch (err) {
+              console.error('Error sending message:', err);
+            }
           }}
         />
       )}

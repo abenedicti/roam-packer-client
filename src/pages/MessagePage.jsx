@@ -99,19 +99,16 @@ function MessagePage() {
   //* send text message
   const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedUser) return;
-    const newMessage = {
-      sender: { _id: loggedUserId, username: 'You' },
-      receiver: { _id: selectedUser._id, username: selectedUser.username },
-      text: messageText,
-      createdAt: new Date(),
-    };
+
     try {
       await service.post('/messages', {
         receiverId: selectedUser._id,
         text: messageText,
       });
-      setBackendMessages((prev) => [...prev, newMessage]);
+
       setMessageText('');
+
+      fetchMessages();
     } catch (err) {
       console.error(err);
     }

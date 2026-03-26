@@ -197,66 +197,72 @@ function MessagePage() {
               Refresh conversation
             </button>
             <div className="messages modern-messages">
-              {currentConversation.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`message modern-message ${
-                    msg.sender._id?.toString() === loggedUserId
-                      ? 'sent'
-                      : 'received'
-                  }`}
-                >
-                  {msg.sender._id !== loggedUserId && (
-                    <strong
-                      onClick={() => navigate(`/profile/${msg.sender._id}`)}
-                    >
-                      {msg.sender.username}
-                    </strong>
-                  )}
+              {currentConversation.map((msg, idx) => {
+                const senderId =
+                  typeof msg.sender === 'object'
+                    ? msg.sender._id.toString()
+                    : msg.sender.toString();
 
-                  <p>{msg.text}</p>
+                return (
+                  <div
+                    key={idx}
+                    className={`message modern-message ${
+                      senderId === loggedUserId.toString() ? 'sent' : 'received'
+                    }`}
+                  >
+                    {senderId !== loggedUserId.toString() && (
+                      <strong
+                        onClick={() => navigate(`/profile/${msg.sender._id}`)}
+                      >
+                        {msg.sender.username || msg.sender}{' '}
+                        {/* fallback si username absent */}
+                      </strong>
+                    )}
 
-                  {msg.itineraryId && (
-                    <div style={{ marginTop: '5px' }}>
-                      {msg.itineraryLink && (
-                        <button
-                          onClick={() =>
-                            (window.location.href = msg.itineraryLink)
-                          }
-                          style={{
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            backgroundColor: '#4caf50',
-                            color: 'white',
-                            border: 'none',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          View itinerary 🗺️
-                        </button>
-                      )}
-                      {msg.itineraryThumbnail && (
-                        <img
-                          src={msg.itineraryThumbnail}
-                          alt="Itinerary thumbnail"
-                          style={{
-                            marginTop: '5px',
-                            width: '100px',
-                            borderRadius: '4px',
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
+                    <p>{msg.text}</p>
 
-                  <span className="time">
-                    {new Date(msg.createdAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-              ))}
+                    {msg.itineraryId && (
+                      <div style={{ marginTop: '5px' }}>
+                        {msg.itineraryLink && (
+                          <button
+                            onClick={() =>
+                              (window.location.href = msg.itineraryLink)
+                            }
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              backgroundColor: '#4caf50',
+                              color: 'white',
+                              border: 'none',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            View itinerary 🗺️
+                          </button>
+                        )}
+                        {msg.itineraryThumbnail && (
+                          <img
+                            src={msg.itineraryThumbnail}
+                            alt="Itinerary thumbnail"
+                            style={{
+                              marginTop: '5px',
+                              width: '100px',
+                              borderRadius: '4px',
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    <span className="time">
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 

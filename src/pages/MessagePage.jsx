@@ -198,24 +198,30 @@ function MessagePage() {
             </button>
             <div className="messages modern-messages">
               {currentConversation.map((msg, idx) => {
+                // Déterminer l'ID du sender de façon fiable
                 const senderId =
-                  typeof msg.sender === 'object'
+                  msg.sender && msg.sender._id
                     ? msg.sender._id.toString()
-                    : msg.sender.toString();
+                    : msg.sender?.toString();
+
+                // Déterminer le username de façon fiable
+                const senderUsername =
+                  msg.sender && msg.sender.username
+                    ? msg.sender.username
+                    : typeof msg.sender === 'string'
+                      ? 'User' // fallback si pas de username
+                      : '';
+
+                const isMe = senderId === loggedUserId.toString();
 
                 return (
                   <div
                     key={idx}
-                    className={`message modern-message ${
-                      senderId === loggedUserId.toString() ? 'sent' : 'received'
-                    }`}
+                    className={`message modern-message ${isMe ? 'sent' : 'received'}`}
                   >
-                    {senderId !== loggedUserId.toString() && (
-                      <strong
-                        onClick={() => navigate(`/profile/${msg.sender._id}`)}
-                      >
-                        {msg.sender.username || msg.sender}{' '}
-                        {/* fallback si username absent */}
+                    {!isMe && (
+                      <strong onClick={() => navigate(`/profile/${senderId}`)}>
+                        {senderUsername}
                       </strong>
                     )}
 

@@ -21,7 +21,7 @@ function MessagePage() {
   const [userToDelete, setUserToDelete] = useState(null);
   const messagesEndRef = useRef(null);
 
-  //* fetch backend messages
+  //* Fetch backend messages
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
@@ -38,45 +38,39 @@ function MessagePage() {
     fetchMessages();
   }, []);
 
-  //* listen for shared messages in localStorage
+  //* Listen for shared messages in localStorage
   useEffect(() => {
     const handleStorageUpdate = () => {
       const stored = JSON.parse(localStorage.getItem('messages')) || [];
       setSharedMessages(stored);
     };
     window.addEventListener('messagesUpdated', handleStorageUpdate);
-    handleStorageUpdate(); // load initially
+    handleStorageUpdate(); // Load initially
     return () =>
       window.removeEventListener('messagesUpdated', handleStorageUpdate);
   }, []);
 
-  //* merge backend + shared messages
+  //* Merge backend + shared messages
   useEffect(() => {
     const combined = [...backendMessages, ...sharedMessages];
     combined.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     setMessages(combined);
   }, [backendMessages, sharedMessages]);
 
-  //* unique users for sidebar
+  //* Unique users for sidebar
   const uniqueUsers = useMemo(() => {
     const map = new Map();
     messages.forEach((msg) => {
-      if (!msg.sender || !msg.receiver) return;
-
-      // Ignore messages with oneself
-      if (msg.sender._id === msg.receiver._id) return;
-
       let otherUser = null;
       if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
       else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
-
       if (otherUser && otherUser._id !== loggedUserId)
         map.set(otherUser._id, otherUser);
     });
     return Array.from(map.values());
   }, [messages, loggedUserId]);
 
-  //* current conversation
+  //* Current conversation
   const currentConversation = useMemo(() => {
     if (!selectedUser) return [];
     return messages.filter((msg) => {
@@ -97,12 +91,12 @@ function MessagePage() {
     });
   }, [messages, selectedUser, loggedUserId]);
 
-  //* auto scroll
+  //* Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentConversation]);
 
-  //* send text message
+  //* Send text message
   const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedUser) return;
 
@@ -126,13 +120,14 @@ function MessagePage() {
     }
   };
 
-  //* delete conversation
+  //* Delete conversation
   const handleDeleteConversation = async (userId) => {
     setIsDeleting(true);
     try {
-      await service.delete(`/messages/conversation/${userId}`);
+      // Prevent trying to delete "yourself"
+      if (userId === 'me' || userId === loggedUserId) return;
 
-      // Backend messages removal
+      await service.delete(`/messages/conversation/${userId}`);
       setBackendMessages((prev) =>
         prev.filter(
           (msg) =>
@@ -144,19 +139,6 @@ function MessagePage() {
         ),
       );
 
-      // LocalStorage removal
-      const stored = JSON.parse(localStorage.getItem('messages')) || [];
-      const filteredStored = stored.filter(
-        (msg) =>
-          !(
-            (msg.sender === userId && msg.receiver === loggedUserId) ||
-            (msg.sender === loggedUserId && msg.receiver === userId)
-          ),
-      );
-      localStorage.setItem('messages', JSON.stringify(filteredStored));
-
-      window.dispatchEvent(new Event('messagesUpdated'));
-
       if (selectedUser?._id === userId) setSelectedUser(null);
     } catch (err) {
       console.error(err);
@@ -166,16 +148,12 @@ function MessagePage() {
   };
 
   const openDeleteModal = (user) => {
-    if (user._id === loggedUserId) return;
     setUserToDelete(user);
     setIsDeleteModalOpen(true);
   };
 
   const confirmDeleteConversation = () => {
-    if (!userToDelete?._id) {
-      console.warn('Invalid userToDelete:', userToDelete);
-      return;
-    }
+    if (!userToDelete) return;
     handleDeleteConversation(userToDelete._id);
     setIsDeleteModalOpen(false);
     setUserToDelete(null);
@@ -239,6 +217,7 @@ function MessagePage() {
                     </strong>
                   )}
                   <p>{msg.text}</p>
+
                   {msg.itineraryId && (
                     <div style={{ marginTop: '5px' }}>
                       {msg.itineraryLink && (
@@ -271,6 +250,7 @@ function MessagePage() {
                       )}
                     </div>
                   )}
+
                   <span className="time">
                     {new Date(msg.createdAt).toLocaleTimeString([], {
                       hour: '2-digit',

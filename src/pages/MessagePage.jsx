@@ -166,12 +166,16 @@ function MessagePage() {
   };
 
   const openDeleteModal = (user) => {
+    if (user._id === loggedUserId) return;
     setUserToDelete(user);
     setIsDeleteModalOpen(true);
   };
 
   const confirmDeleteConversation = () => {
-    if (!userToDelete) return;
+    if (!userToDelete?._id) {
+      console.warn('Invalid userToDelete:', userToDelete);
+      return;
+    }
     handleDeleteConversation(userToDelete._id);
     setIsDeleteModalOpen(false);
     setUserToDelete(null);

@@ -33,19 +33,30 @@ function ItineraryDetailsPage() {
 
   //* fetch users from messages in localStorage
   useEffect(() => {
-    const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
-    const uniqueUsers = new Map();
+    const fetchChatUsers = async () => {
+      try {
+        const res = await service.get('/messages/conversations');
 
-    storedMessages.forEach((msg) => {
-      let otherUser = null;
-      if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
-      else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
+        const uniqueUsers = new Map();
 
-      if (otherUser && otherUser._id !== loggedUserId)
-        uniqueUsers.set(otherUser._id, otherUser);
-    });
+        res.data.forEach((msg) => {
+          let otherUser = null;
 
-    setChatUsers(Array.from(uniqueUsers.values()));
+          if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
+          else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
+
+          if (otherUser && otherUser._id !== loggedUserId) {
+            uniqueUsers.set(otherUser._id, otherUser);
+          }
+        });
+
+        setChatUsers(Array.from(uniqueUsers.values()));
+      } catch (err) {
+        console.error('Error fetching chat users:', err);
+      }
+    };
+
+    if (loggedUserId) fetchChatUsers();
   }, [loggedUserId]);
 
   //* listen for localStorage updates

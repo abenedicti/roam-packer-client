@@ -356,7 +356,7 @@ function MessagePage() {
       setSharedMessages(stored);
     };
     window.addEventListener('messagesUpdated', handleStorageUpdate);
-    handleStorageUpdate(); // load initially
+    handleStorageUpdate();
     return () =>
       window.removeEventListener('messagesUpdated', handleStorageUpdate);
   }, []);
@@ -364,8 +364,31 @@ function MessagePage() {
   //* merge backend + shared messages
   useEffect(() => {
     const combined = [...backendMessages, ...sharedMessages];
-    combined.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-    setMessages(combined);
+
+    // NORMALISATION : tous les sender/receiver et ids en string
+    const normalized = combined.map((msg) => ({
+      ...msg,
+      sender: {
+        _id:
+          typeof msg.sender === 'object'
+            ? msg.sender._id.toString()
+            : msg.sender.toString(),
+        username: msg.sender.username || 'User',
+      },
+      receiver: {
+        _id:
+          typeof msg.receiver === 'object'
+            ? msg.receiver._id.toString()
+            : msg.receiver.toString(),
+        username: msg.receiver.username || 'User',
+      },
+    }));
+
+    normalized.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+    setMessages(normalized);
   }, [backendMessages, sharedMessages]);
 
   //* unique users for sidebar
@@ -384,43 +407,19 @@ function MessagePage() {
   //* current conversation
   const currentConversation = useMemo(() => {
     if (!selectedUser) return [];
-    return messages.filter((msg) => {
-      const isChatMsg =
+    return messages.filter(
+      (msg) =>
         (msg.sender._id === selectedUser._id &&
           msg.receiver._id === loggedUserId) ||
         (msg.sender._id === loggedUserId &&
-          msg.receiver._id === selectedUser._id);
-
-      const isSharedItinerary =
-        msg.itineraryId &&
-        ((msg.sender._id === loggedUserId &&
-          msg.receiver._id === selectedUser._id) ||
-          (msg.sender._id === selectedUser._id &&
-            msg.receiver._id === loggedUserId));
-
-      return isChatMsg || isSharedItinerary;
-    });
+          msg.receiver._id === selectedUser._id),
+    );
   }, [messages, selectedUser, loggedUserId]);
-
-  //* normalize messages for reliable sender/receiver
-  const normalizedConversation = useMemo(() => {
-    return currentConversation.map((msg) => {
-      const sender =
-        msg.sender && msg.sender._id
-          ? msg.sender
-          : { _id: msg.sender, username: 'User' };
-      const receiver =
-        msg.receiver && msg.receiver._id
-          ? msg.receiver
-          : { _id: msg.receiver, username: 'User' };
-      return { ...msg, sender, receiver };
-    });
-  }, [currentConversation]);
 
   //* auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [normalizedConversation]);
+  }, [currentConversation]);
 
   //* send text message
   const handleSendMessage = async () => {
@@ -522,9 +521,8 @@ function MessagePage() {
               Refresh conversation
             </button>
             <div className="messages modern-messages">
-              {normalizedConversation.map((msg, idx) => {
-                const isMe =
-                  msg.sender._id.toString() === loggedUserId.toString();
+              {currentConversation.map((msg, idx) => {
+                const isMe = msg.sender._id === loggedUserId;
 
                 return (
                   <div

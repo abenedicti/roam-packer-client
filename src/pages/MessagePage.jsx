@@ -201,7 +201,9 @@ function MessagePage() {
                 <div
                   key={idx}
                   className={`message modern-message ${
-                    msg.sender._id === loggedUserId ? 'sent' : 'received'
+                    msg.sender._id?.toString() === loggedUserId
+                      ? 'sent'
+                      : 'received'
                   }`}
                 >
                   {msg.sender._id !== loggedUserId && (

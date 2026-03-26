@@ -3,6 +3,7 @@ import axios from 'axios';
 const service = axios.create({
   baseURL: `${import.meta.env.VITE_SERVER_URL}/api`,
 });
+console.log(import.meta.env.VITE_SERVER_URL);
 //* add token for each request
 service.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');

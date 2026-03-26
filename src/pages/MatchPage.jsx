@@ -89,13 +89,12 @@ function MatchPage() {
           {savedMatches
             .filter(
               (match, idx, arr) =>
-                match.photoUrl &&
                 arr.findIndex((m) => m._id === match._id) === idx,
             )
             .map((match) => (
               <div className="card" key={match._id}>
                 <img
-                  src={match.photoUrl}
+                  src={match.photoUrl || '/default-avatar.png'}
                   alt={match.username}
                   className="match-photo"
                 />

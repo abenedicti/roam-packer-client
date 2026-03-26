@@ -62,10 +62,12 @@ function MessagePage() {
     const map = new Map();
     messages.forEach((msg) => {
       let otherUser = null;
-      if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
-      else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
-      if (otherUser && otherUser._id !== loggedUserId)
-        map.set(otherUser._id, otherUser);
+      if (msg.sender && msg.receiver) {
+        if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
+        else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
+        if (otherUser && otherUser._id !== loggedUserId)
+          map.set(otherUser._id, otherUser);
+      }
     });
     return Array.from(map.values());
   }, [messages, loggedUserId]);
@@ -75,21 +77,34 @@ function MessagePage() {
     if (!selectedUser) return [];
     return messages.filter((msg) => {
       const isChatMsg =
-        (msg.sender._id === selectedUser._id &&
+        (msg.sender &&
+          msg.receiver &&
+          msg.sender._id === selectedUser._id &&
           msg.receiver._id === loggedUserId) ||
-        (msg.sender._id === loggedUserId &&
+        (msg.sender &&
+          msg.receiver &&
+          msg.sender._id === loggedUserId &&
           msg.receiver._id === selectedUser._id);
 
       const isSharedItinerary =
         msg.itineraryId &&
-        ((msg.sender._id === loggedUserId &&
+        ((msg.sender &&
+          msg.receiver &&
+          msg.sender._id === loggedUserId &&
           msg.receiver._id === selectedUser._id) ||
-          (msg.sender._id === selectedUser._id &&
+          (msg.sender &&
+            msg.receiver &&
+            msg.sender._id === selectedUser._id &&
             msg.receiver._id === loggedUserId));
 
       return isChatMsg || isSharedItinerary;
     });
   }, [messages, selectedUser, loggedUserId]);
+
+  useEffect(() => {
+    console.log('Selected User:', selectedUser); // Log to check selectedUser
+    console.log('Current Conversation:', currentConversation); // Log to check currentConversation
+  }, [selectedUser, currentConversation]);
 
   //* auto scroll
   useEffect(() => {
@@ -129,7 +144,9 @@ function MessagePage() {
         prev.filter(
           (msg) =>
             !(
-              (msg.sender._id === userId &&
+              (msg.sender &&
+                msg.receiver &&
+                msg.sender._id === userId &&
                 msg.receiver._id === loggedUserId) ||
               (msg.sender._id === loggedUserId && msg.receiver._id === userId)
             ),
@@ -205,7 +222,7 @@ function MessagePage() {
                       : 'received'
                   }`}
                 >
-                  {msg.sender._id !== loggedUserId && (
+                  {msg.sender && msg.sender._id !== loggedUserId && (
                     <strong
                       onClick={() => navigate(`/profile/${msg.sender._id}`)}
                     >
@@ -222,14 +239,6 @@ function MessagePage() {
                           onClick={() =>
                             (window.location.href = msg.itineraryLink)
                           }
-                          style={{
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            backgroundColor: '#4caf50',
-                            color: 'white',
-                            border: 'none',
-                            cursor: 'pointer',
-                          }}
                         >
                           View itinerary 🗺️
                         </button>
@@ -247,7 +256,6 @@ function MessagePage() {
                       )}
                     </div>
                   )}
-
                   <span className="time">
                     {new Date(msg.createdAt).toLocaleTimeString([], {
                       hour: '2-digit',

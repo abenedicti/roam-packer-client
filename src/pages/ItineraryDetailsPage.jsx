@@ -13,7 +13,9 @@ function ItineraryDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [chatUsers, setChatUsers] = useState([]);
   const [sharingStatus, setSharingStatus] = useState({});
+  const [messages, setMessages] = useState([]);
 
+  //* fetch itinerary
   useEffect(() => {
     const fetchItinerary = async () => {
       setIsLoading(true);
@@ -29,55 +31,75 @@ function ItineraryDetailsPage() {
     fetchItinerary();
   }, [itineraryId]);
 
+  //* fetch users from messages in localStorage
   useEffect(() => {
     const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
-
     const uniqueUsers = new Map();
 
     storedMessages.forEach((msg) => {
       let otherUser = null;
+      if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
+      else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
 
-      if (msg.sender._id === loggedUserId) {
-        otherUser = msg.receiver;
-      } else if (msg.receiver._id === loggedUserId) {
-        otherUser = msg.sender;
-      }
-
-      if (otherUser && otherUser._id !== loggedUserId) {
+      if (otherUser && otherUser._id !== loggedUserId)
         uniqueUsers.set(otherUser._id, otherUser);
-      }
     });
 
     setChatUsers(Array.from(uniqueUsers.values()));
   }, [loggedUserId]);
 
+  //* listen for localStorage updates
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
+      setMessages(storedMessages);
+    };
+
+    window.addEventListener('messagesUpdated', handleStorageUpdate);
+    handleStorageUpdate(); // initial load
+
+    return () =>
+      window.removeEventListener('messagesUpdated', handleStorageUpdate);
+  }, []);
+
   if (isLoading) return <LoadingSpinner />;
   if (!itinerary) return <p>No itinerary found.</p>;
 
-  const appendMessageToStorage = (msg) => {
-    const stored = JSON.parse(localStorage.getItem('messages')) || [];
-    const updated = [...stored, msg];
-    localStorage.setItem('messages', JSON.stringify(updated));
-    window.dispatchEvent(new Event('messagesUpdated'));
-    return updated;
-  };
-
   const handleShare = async (user) => {
     try {
+      //* share itinerary on backend
       await service.put(`/itineraries/${itineraryId}/share`, {
         targetUserId: user._id,
       });
 
+      //* create share message
       const shareMessage = {
         sender: { _id: loggedUserId, username: 'You' },
         receiver: { _id: user._id, username: user.username },
         text: `I shared an itinerary with you: "${itinerary.title}"`,
         itineraryId: itineraryId,
+        itineraryLink: `/itinerary/${itineraryId}`,
+        itineraryThumbnail: itinerary.thumbnailUrl || null,
         createdAt: new Date(),
       };
 
-      appendMessageToStorage(shareMessage);
+      //* post to backend messages so receiver can fetch it
+      await service.post('/messages', {
+        receiverId: user._id,
+        text: shareMessage.text,
+        itineraryId: itineraryId,
+        itineraryLink: shareMessage.itineraryLink,
+        itineraryThumbnail: shareMessage.itineraryThumbnail,
+      });
 
+      //* update localStorage for instant display
+      const stored = JSON.parse(localStorage.getItem('messages')) || [];
+      const updated = [...stored, shareMessage];
+      localStorage.setItem('messages', JSON.stringify(updated));
+      window.dispatchEvent(new Event('messagesUpdated'));
+
+      //* update local state
+      setMessages(updated);
       setSharingStatus((prev) => ({ ...prev, [user._id]: 'success' }));
     } catch (err) {
       console.log(err);
@@ -99,22 +121,22 @@ function ItineraryDetailsPage() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {itinerary.points.map((p, idx) => (
-          <Marker key={idx} position={[p.lat, p.lng]}>
-            <Popup>
-              <strong>{p.city}</strong>
-              <p>{p.comment}</p>
-            </Popup>
-          </Marker>
-        ))}
+        {itinerary.points
+          .filter((p) => p.lat != null && p.lng != null)
+          .map((p, idx) => (
+            <Marker key={idx} position={[p.lat, p.lng]}>
+              <Popup>
+                <strong>{p.city}</strong>
+                <p>{p.comment}</p>
+              </Popup>
+            </Marker>
+          ))}
       </MapContainer>
 
       <div style={{ marginTop: '2rem' }}>
         <h3>Share with someone from your chat</h3>
-
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
           {chatUsers.length === 0 && <p>No conversations yet to share with.</p>}
-
           {chatUsers.map((user) => (
             <button
               key={user._id}

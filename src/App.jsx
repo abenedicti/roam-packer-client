@@ -21,6 +21,7 @@ import './App.css';
 import CityDetailsPage from './pages/CityDetailsPage';
 import './utils/fixLeafletIcon';
 import Footer from './components/Footer';
+import PublicProfile from './components/PublicProfile';
 
 function App() {
   return (
@@ -110,6 +111,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/profile/:userId" element={<PublicProfile />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>

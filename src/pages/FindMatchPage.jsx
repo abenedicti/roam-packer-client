@@ -26,7 +26,7 @@ function FindMatchPage() {
   });
 
   useEffect(() => {
-    // Fetch saved matches when the page loads
+    //* fetch saved matches when the page loads
     const fetchSavedMatches = async () => {
       try {
         const res = await service.get('/users/me'); // fetch connected user
@@ -78,7 +78,7 @@ function FindMatchPage() {
         });
       }
 
-      // maj list
+      //* maj list
       setSavedMatches(res.data);
 
       setNotifTitle('Match saved!');

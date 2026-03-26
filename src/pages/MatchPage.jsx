@@ -100,6 +100,9 @@ function MatchPage() {
                   className="match-photo"
                 />
                 <h3>{match.username}</h3>
+                <button onClick={() => navigate(`/profile/${match._id}`)}>
+                  See Profile
+                </button>
 
                 <p>
                   <strong>Match:</strong> {match.matchPercentage}%

@@ -88,41 +88,89 @@ function CreateItineraryPage() {
       const country = data.address?.country || 'Unknown';
       const name = city !== 'Unknown' ? city : 'Custom location';
 
-      setPoints((prev) => [
-        ...prev,
-        { name, city, country, lat, lng, comment: '' },
-      ]);
+      setPoints((prev) => {
+        const updated = [
+          ...prev,
+          {
+            name,
+            city,
+            country,
+            lat: Number(lat),
+            lng: Number(lng),
+            comment: '',
+          },
+        ];
+
+        return updated;
+      });
     } catch (err) {
       console.error('Reverse geocoding failed', err);
-      setPoints((prev) => [
-        ...prev,
-        {
-          name: 'Custom location',
-          city: 'Unknown',
-          country: 'Unknown',
-          lat,
-          lng,
-          comment: '',
-        },
-      ]);
+      setPoints((prev) => {
+        const updated = [
+          ...prev,
+          {
+            name: 'Custom location',
+            city: 'Unknown',
+            country: 'Unknown',
+            lat: Number(lat),
+            lng: Number(lng),
+            comment: '',
+          },
+        ];
+
+        return updated;
+      });
     }
   };
 
   const handleRemovePoint = (index) =>
     setPoints((prev) => prev.filter((_, i) => i !== index));
 
-  const handleAddFavoriteToItinerary = (fav) => {
-    setPoints((prev) => [
-      ...prev,
-      {
+  const handleAddFavoriteToItinerary = async (fav) => {
+    try {
+      if (fav.lat && fav.lng) {
+        setPoints((prev) => [
+          ...prev,
+          {
+            name: fav.name,
+            city: fav.city,
+            country: fav.country,
+            lat: Number(fav.lat),
+            lng: Number(fav.lng),
+            comment: '',
+          },
+        ]);
+        return;
+      }
+
+      const query = `${fav.name} ${fav.city}`;
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${query}`,
+      );
+      const data = await response.json();
+
+      if (data.length === 0) {
+        console.log(' No coords found for', query);
+        return;
+      }
+
+      const lat = Number(data[0].lat);
+      const lng = Number(data[0].lon);
+
+      const newPoint = {
         name: fav.name,
         city: fav.city,
         country: fav.country,
-        lat: fav.lat || null,
-        lng: fav.lng || null,
+        lat,
+        lng,
         comment: '',
-      },
-    ]);
+      };
+
+      setPoints((prev) => [...prev, newPoint]);
+    } catch (err) {
+      console.error('Geocoding error:', err);
+    }
   };
 
   const handleHideFavorite = (favId) => {
@@ -228,7 +276,7 @@ function CreateItineraryPage() {
           <MapFlyTo position={searchedPosition} />
           <MapClickHandler onAddPoint={handleAddMapPoint} />
           {points
-            .filter((p) => p.lat && p.lng)
+            .filter((p) => p.lat !== null && p.lng !== null)
             .map((p, idx) => (
               <Marker key={idx} position={[p.lat, p.lng]}>
                 <Popup>

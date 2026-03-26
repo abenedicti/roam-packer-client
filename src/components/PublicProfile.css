@@ -1,0 +1,21 @@
+.public-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30%;
+  margin: 50px auto;
+  border: 2px solid var(--border);
+  background: var(--btnAndLinks);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+.public-profile p {
+  color: var(--border);
+}
+.public-profile-infos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}

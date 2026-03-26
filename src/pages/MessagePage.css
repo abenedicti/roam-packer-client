@@ -29,15 +29,36 @@
 .modern-user-item {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   align-items: center;
   padding: 10px 12px;
   border-radius: 10px;
   transition: all 0.2s ease;
 }
-
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+.username {
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--bg-dark);
+}
+.profile-btn {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: white;
+  font-size: 0.85rem;
+  padding: 0;
+}
 .modern-user-item:hover {
   background-color: var(--bg-section);
   color: white;
+}
+.profile-btn:hover {
+  background: none;
+  transition: none;
 }
 
 .modern-user-item.active {
@@ -105,7 +126,12 @@
   color: #333;
   margin: 10px;
 }
-
+.message strong {
+  display: block;
+  margin: 3px 0;
+  color: var(--bg-dark);
+  cursor: pointer;
+}
 .modern-message .time {
   font-size: 0.7rem;
   color: #666;

@@ -1,4 +1,5 @@
 import { useEffect, useState, useContext, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/Auth.context';
 import { FaTrash } from 'react-icons/fa';
 import DeleteModal from '../components/DeleteModal';
@@ -7,7 +8,10 @@ import service from '../services/service.config';
 import '../pages/MessagePage.css';
 
 function MessagePage() {
+  const navigate = useNavigate();
   const { loggedUserId } = useContext(AuthContext);
+  const [backendMessages, setBackendMessages] = useState([]);
+  const [sharedMessages, setSharedMessages] = useState([]);
   const [messages, setMessages] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState('');
@@ -17,12 +21,12 @@ function MessagePage() {
   const [userToDelete, setUserToDelete] = useState(null);
   const messagesEndRef = useRef(null);
 
-  //* Fetch all messages
+  //* fetch backend messages
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
       const res = await service.get('/messages/conversations');
-      setMessages(res.data);
+      setBackendMessages(res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -30,63 +34,83 @@ function MessagePage() {
     }
   };
 
-  //* Initial load
   useEffect(() => {
     fetchMessages();
   }, []);
 
-  //* Unique users
+  //* listen for shared messages in localStorage
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      const stored = JSON.parse(localStorage.getItem('messages')) || [];
+      setSharedMessages(stored);
+    };
+    window.addEventListener('messagesUpdated', handleStorageUpdate);
+    handleStorageUpdate(); // load initially
+    return () =>
+      window.removeEventListener('messagesUpdated', handleStorageUpdate);
+  }, []);
+
+  //* merge backend + shared messages
+  useEffect(() => {
+    const combined = [...backendMessages, ...sharedMessages];
+    combined.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    setMessages(combined);
+  }, [backendMessages, sharedMessages]);
+
+  //* unique users for sidebar
   const uniqueUsers = useMemo(() => {
-    return Array.from(
-      new Map(
-        messages
-          .map((msg) => {
-            if (msg.sender._id === loggedUserId) return msg.receiver;
-            if (msg.receiver._id === loggedUserId) return msg.sender;
-            return null;
-          })
-          .filter((user) => user && user._id !== loggedUserId)
-          .map((user) => [user._id, user]),
-      ).values(),
-    );
+    const map = new Map();
+    messages.forEach((msg) => {
+      let otherUser = null;
+      if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
+      else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
+      if (otherUser && otherUser._id !== loggedUserId)
+        map.set(otherUser._id, otherUser);
+    });
+    return Array.from(map.values());
   }, [messages, loggedUserId]);
 
-  //* Current conversation
+  //* current conversation
   const currentConversation = useMemo(() => {
     if (!selectedUser) return [];
-    return messages.filter(
-      (msg) =>
+    return messages.filter((msg) => {
+      const isChatMsg =
         (msg.sender._id === selectedUser._id &&
           msg.receiver._id === loggedUserId) ||
         (msg.sender._id === loggedUserId &&
-          msg.receiver._id === selectedUser._id),
-    );
+          msg.receiver._id === selectedUser._id);
+
+      const isSharedItinerary =
+        msg.itineraryId &&
+        ((msg.sender._id === loggedUserId &&
+          msg.receiver._id === selectedUser._id) ||
+          (msg.sender._id === selectedUser._id &&
+            msg.receiver._id === loggedUserId));
+
+      return isChatMsg || isSharedItinerary;
+    });
   }, [messages, selectedUser, loggedUserId]);
 
-  //* Scroll auto
+  //* auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentConversation]);
 
-  //* Send message
+  //* send text message
   const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedUser) return;
-
     const newMessage = {
       sender: { _id: loggedUserId, username: 'You' },
       receiver: { _id: selectedUser._id, username: selectedUser.username },
       text: messageText,
       createdAt: new Date(),
     };
-
     try {
       await service.post('/messages', {
         receiverId: selectedUser._id,
         text: messageText,
       });
-
-      //* instant update sender
-      setMessages((prev) => [...prev, newMessage]);
+      setBackendMessages((prev) => [...prev, newMessage]);
       setMessageText('');
     } catch (err) {
       console.error(err);
@@ -100,14 +124,12 @@ function MessagePage() {
     }
   };
 
-  //* Delete conversation
+  //* delete conversation
   const handleDeleteConversation = async (userId) => {
     setIsDeleting(true);
-
     try {
       await service.delete(`/messages/conversation/${userId}`);
-
-      setMessages((prev) =>
+      setBackendMessages((prev) =>
         prev.filter(
           (msg) =>
             !(
@@ -117,7 +139,6 @@ function MessagePage() {
             ),
         ),
       );
-
       if (selectedUser?._id === userId) setSelectedUser(null);
     } catch (err) {
       console.error(err);
@@ -145,7 +166,6 @@ function MessagePage() {
       <div className="sidebar modern-sidebar">
         <h2>Conversations</h2>
         {uniqueUsers.length === 0 && <p>No conversations yet</p>}
-
         {uniqueUsers.map((user) => (
           <div
             key={user._id}
@@ -153,8 +173,17 @@ function MessagePage() {
               selectedUser?._id === user._id ? 'active' : ''
             }`}
           >
-            <span onClick={() => setSelectedUser(user)}>{user.username}</span>
-
+            <div className="user-info">
+              <span onClick={() => setSelectedUser(user)} className="username">
+                {user.username}
+              </span>
+              <button
+                onClick={() => navigate(`/profile/${user._id}`)}
+                className="profile-btn"
+              >
+                See Profile
+              </button>
+            </div>
             <FaTrash
               className="delete-icon"
               onClick={() => openDeleteModal(user)}
@@ -167,11 +196,9 @@ function MessagePage() {
         {selectedUser ? (
           <>
             <h3>Chat with {selectedUser.username}</h3>
-
             <button onClick={fetchMessages} style={{ marginBottom: '10px' }}>
               Refresh conversation
             </button>
-
             <div className="messages modern-messages">
               {currentConversation.map((msg, idx) => (
                 <div
@@ -180,7 +207,49 @@ function MessagePage() {
                     msg.sender._id === loggedUserId ? 'sent' : 'received'
                   }`}
                 >
+                  {msg.sender._id !== loggedUserId && (
+                    <strong
+                      onClick={() => navigate(`/profile/${msg.sender._id}`)}
+                    >
+                      {msg.sender.username}
+                    </strong>
+                  )}
+
                   <p>{msg.text}</p>
+
+                  {msg.itineraryId && (
+                    <div style={{ marginTop: '5px' }}>
+                      {msg.itineraryLink && (
+                        <button
+                          onClick={() =>
+                            (window.location.href = msg.itineraryLink)
+                          }
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          View itinerary 🗺️
+                        </button>
+                      )}
+                      {msg.itineraryThumbnail && (
+                        <img
+                          src={msg.itineraryThumbnail}
+                          alt="Itinerary thumbnail"
+                          style={{
+                            marginTop: '5px',
+                            width: '100px',
+                            borderRadius: '4px',
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+
                   <span className="time">
                     {new Date(msg.createdAt).toLocaleTimeString([], {
                       hour: '2-digit',
@@ -219,7 +288,6 @@ function MessagePage() {
           Are you sure you want to delete the conversation with{' '}
           <strong>{userToDelete?.username}</strong>?
         </p>
-
         <div className="delete-modal-actions">
           <button onClick={confirmDeleteConversation}>Delete</button>
           <button onClick={() => setIsDeleteModalOpen(false)}>Cancel</button>

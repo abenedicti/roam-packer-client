@@ -42,13 +42,21 @@ function FavoritePage() {
       name: fav.name,
       city: fav.city,
       country: fav.country,
-      lat: fav.lat || fav.y || null,
-      lng: fav.lng || fav.x || null,
+      lat: fav.lat ?? fav.y ?? null,
+      lng: fav.lng ?? fav.x ?? null,
       comment: '',
     };
+    const alreadyExists = addedFavorites.some(
+      (fav) =>
+        fav.name === newFav.name &&
+        fav.lat === newFav.lat &&
+        fav.lng === newFav.lng,
+    );
 
-    const updatedFavorites = [...addedFavorites, newFav];
-    localStorage.setItem('addedFavorites', JSON.stringify(updatedFavorites));
+    if (!alreadyExists) {
+      const updatedFavorites = [...addedFavorites, newFav];
+      localStorage.setItem('addedFavorites', JSON.stringify(updatedFavorites));
+    }
 
     setConfirmation(`✅ "${fav.name}" added to your page 'Create Itinerary!'`);
 

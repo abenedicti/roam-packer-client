@@ -6,12 +6,16 @@ import { countries } from '../data/countries';
 import service from '../services/service.config';
 import { AuthContext } from '../context/Auth.context';
 import LoadingSpinner from '../components/LoadingSpinner';
+import NotificationModal from '../components/NotificationModal';
 
 function ProfilePage() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+
   const { loggedUserId } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [userProfile, setUserProfile] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [criteria, setCriteria] = useState({
     username: '',
@@ -31,7 +35,6 @@ function ProfilePage() {
       if (!loggedUserId) return;
       try {
         const res = await service.get(`/users/${loggedUserId}`);
-        setUserProfile(res.data);
         setCriteria({
           username: res.data.username || '',
           nationality: res.data.nationality || '',
@@ -71,10 +74,7 @@ function ProfilePage() {
       const data = await resCloud.json();
       const photoUrl = data.secure_url;
 
-      //* send to backend to stay in DB
       const res = await service.put(`/users/${loggedUserId}`, { photoUrl });
-
-      //* update after backend confirmation
       setCriteria((prev) => ({ ...prev, photoUrl: res.data.photoUrl }));
     } catch (err) {
       console.error('Upload error:', err);
@@ -89,12 +89,17 @@ function ProfilePage() {
     try {
       const res = await service.put(`/users/${loggedUserId}`, criteria);
       setEditMode(false);
-      setUserProfile(res.data);
       setCriteria((prev) => ({ ...prev, photoUrl: res.data.photoUrl }));
-      alert('Profile saved!');
+
+      setModalTitle('Profile updated');
+      setModalMessage('Your profile has been saved successfully.');
+      setModalOpen(true);
     } catch (err) {
       console.error(err);
-      alert('Error saving profile');
+
+      setModalTitle('Error');
+      setModalMessage('Something went wrong while saving your profile.');
+      setModalOpen(true);
     } finally {
       setIsSaving(false);
     }
@@ -185,11 +190,6 @@ function ProfilePage() {
                 placeholder="I am from..."
                 disabled={!editMode}
               />
-              <datalist id="country-list">
-                {countries.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
             </label>
 
             <label>
@@ -240,6 +240,12 @@ function ProfilePage() {
               />
             </label>
 
+            <datalist id="country-list">
+              {countries.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
+
             {!editMode ? (
               <button type="button" onClick={() => setEditMode(true)}>
                 Edit
@@ -259,6 +265,13 @@ function ProfilePage() {
           </div>
         </div>
       </div>
+
+      <NotificationModal
+        isOpen={modalOpen}
+        title={modalTitle}
+        message={modalMessage}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 }

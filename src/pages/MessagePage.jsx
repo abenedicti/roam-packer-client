@@ -61,13 +61,17 @@ function MessagePage() {
   const uniqueUsers = useMemo(() => {
     const map = new Map();
     messages.forEach((msg) => {
+      if (!msg.sender || !msg.receiver) return;
+
+      // Ignore messages with oneself
+      if (msg.sender._id === msg.receiver._id) return;
+
       let otherUser = null;
-      if (msg.sender && msg.receiver) {
-        if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
-        else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
-        if (otherUser && otherUser._id !== loggedUserId)
-          map.set(otherUser._id, otherUser);
-      }
+      if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
+      else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
+
+      if (otherUser && otherUser._id !== loggedUserId)
+        map.set(otherUser._id, otherUser);
     });
     return Array.from(map.values());
   }, [messages, loggedUserId]);
@@ -77,34 +81,21 @@ function MessagePage() {
     if (!selectedUser) return [];
     return messages.filter((msg) => {
       const isChatMsg =
-        (msg.sender &&
-          msg.receiver &&
-          msg.sender._id === selectedUser._id &&
+        (msg.sender._id === selectedUser._id &&
           msg.receiver._id === loggedUserId) ||
-        (msg.sender &&
-          msg.receiver &&
-          msg.sender._id === loggedUserId &&
+        (msg.sender._id === loggedUserId &&
           msg.receiver._id === selectedUser._id);
 
       const isSharedItinerary =
         msg.itineraryId &&
-        ((msg.sender &&
-          msg.receiver &&
-          msg.sender._id === loggedUserId &&
+        ((msg.sender._id === loggedUserId &&
           msg.receiver._id === selectedUser._id) ||
-          (msg.sender &&
-            msg.receiver &&
-            msg.sender._id === selectedUser._id &&
+          (msg.sender._id === selectedUser._id &&
             msg.receiver._id === loggedUserId));
 
       return isChatMsg || isSharedItinerary;
     });
   }, [messages, selectedUser, loggedUserId]);
-
-  useEffect(() => {
-    console.log('Selected User:', selectedUser); // Log to check selectedUser
-    console.log('Current Conversation:', currentConversation); // Log to check currentConversation
-  }, [selectedUser, currentConversation]);
 
   //* auto scroll
   useEffect(() => {
@@ -140,18 +131,32 @@ function MessagePage() {
     setIsDeleting(true);
     try {
       await service.delete(`/messages/conversation/${userId}`);
+
+      // Backend messages removal
       setBackendMessages((prev) =>
         prev.filter(
           (msg) =>
             !(
-              (msg.sender &&
-                msg.receiver &&
-                msg.sender._id === userId &&
+              (msg.sender._id === userId &&
                 msg.receiver._id === loggedUserId) ||
               (msg.sender._id === loggedUserId && msg.receiver._id === userId)
             ),
         ),
       );
+
+      // LocalStorage removal
+      const stored = JSON.parse(localStorage.getItem('messages')) || [];
+      const filteredStored = stored.filter(
+        (msg) =>
+          !(
+            (msg.sender === userId && msg.receiver === loggedUserId) ||
+            (msg.sender === loggedUserId && msg.receiver === userId)
+          ),
+      );
+      localStorage.setItem('messages', JSON.stringify(filteredStored));
+
+      window.dispatchEvent(new Event('messagesUpdated'));
+
       if (selectedUser?._id === userId) setSelectedUser(null);
     } catch (err) {
       console.error(err);
@@ -222,16 +227,14 @@ function MessagePage() {
                       : 'received'
                   }`}
                 >
-                  {msg.sender && msg.sender._id !== loggedUserId && (
+                  {msg.sender._id !== loggedUserId && (
                     <strong
                       onClick={() => navigate(`/profile/${msg.sender._id}`)}
                     >
                       {msg.sender.username}
                     </strong>
                   )}
-
                   <p>{msg.text}</p>
-
                   {msg.itineraryId && (
                     <div style={{ marginTop: '5px' }}>
                       {msg.itineraryLink && (
@@ -239,6 +242,14 @@ function MessagePage() {
                           onClick={() =>
                             (window.location.href = msg.itineraryLink)
                           }
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
                         >
                           View itinerary 🗺️
                         </button>

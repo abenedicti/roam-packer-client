@@ -26,7 +26,7 @@ function MessagePage() {
     setIsLoading(true);
     try {
       const res = await service.get('/messages/conversations');
-      setBackendMessages(res.data);
+      setBackendMessages(res.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,10 +42,14 @@ function MessagePage() {
   useEffect(() => {
     const handleStorageUpdate = () => {
       const stored = JSON.parse(localStorage.getItem('messages')) || [];
-      setSharedMessages(stored);
+      // supprimer doublons basés sur _id si existant
+      const uniqueStored = stored.filter(
+        (v, i, a) => a.findIndex((m) => m._id === v._id) === i,
+      );
+      setSharedMessages(uniqueStored);
     };
     window.addEventListener('messagesUpdated', handleStorageUpdate);
-    handleStorageUpdate(); // Load initially
+    handleStorageUpdate(); // load initially
     return () =>
       window.removeEventListener('messagesUpdated', handleStorageUpdate);
   }, []);
@@ -61,6 +65,7 @@ function MessagePage() {
   const uniqueUsers = useMemo(() => {
     const map = new Map();
     messages.forEach((msg) => {
+      if (!msg.sender || !msg.receiver) return;
       let otherUser = null;
       if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
       else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
@@ -74,6 +79,8 @@ function MessagePage() {
   const currentConversation = useMemo(() => {
     if (!selectedUser) return [];
     return messages.filter((msg) => {
+      if (!msg.sender || !msg.receiver) return false;
+
       const isChatMsg =
         (msg.sender._id === selectedUser._id &&
           msg.receiver._id === loggedUserId) ||
@@ -105,7 +112,6 @@ function MessagePage() {
         receiverId: selectedUser._id,
         text: messageText,
       });
-
       setMessageText('');
       fetchMessages();
     } catch (err) {
@@ -124,21 +130,17 @@ function MessagePage() {
   const handleDeleteConversation = async (userId) => {
     setIsDeleting(true);
     try {
-      // Prevent trying to delete "yourself"
-      if (userId === 'me' || userId === loggedUserId) return;
-
       await service.delete(`/messages/conversation/${userId}`);
       setBackendMessages((prev) =>
         prev.filter(
           (msg) =>
             !(
-              (msg.sender._id === userId &&
-                msg.receiver._id === loggedUserId) ||
-              (msg.sender._id === loggedUserId && msg.receiver._id === userId)
+              (msg.sender?._id === userId &&
+                msg.receiver?._id === loggedUserId) ||
+              (msg.sender?._id === loggedUserId && msg.receiver?._id === userId)
             ),
         ),
       );
-
       if (selectedUser?._id === userId) setSelectedUser(null);
     } catch (err) {
       console.error(err);
@@ -169,9 +171,7 @@ function MessagePage() {
         {uniqueUsers.map((user) => (
           <div
             key={user._id}
-            className={`user-item modern-user-item ${
-              selectedUser?._id === user._id ? 'active' : ''
-            }`}
+            className={`user-item modern-user-item ${selectedUser?._id === user._id ? 'active' : ''}`}
           >
             <div className="user-info">
               <span onClick={() => setSelectedUser(user)} className="username">
@@ -200,65 +200,67 @@ function MessagePage() {
               Refresh conversation
             </button>
             <div className="messages modern-messages">
-              {currentConversation.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`message modern-message ${
-                    msg.sender._id?.toString() === loggedUserId
-                      ? 'sent'
-                      : 'received'
-                  }`}
-                >
-                  {msg.sender._id !== loggedUserId && (
-                    <strong
-                      onClick={() => navigate(`/profile/${msg.sender._id}`)}
-                    >
-                      {msg.sender.username}
-                    </strong>
-                  )}
-                  <p>{msg.text}</p>
-
-                  {msg.itineraryId && (
-                    <div style={{ marginTop: '5px' }}>
-                      {msg.itineraryLink && (
-                        <button
-                          onClick={() =>
-                            (window.location.href = msg.itineraryLink)
-                          }
-                          style={{
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            backgroundColor: '#4caf50',
-                            color: 'white',
-                            border: 'none',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          View itinerary 🗺️
-                        </button>
-                      )}
-                      {msg.itineraryThumbnail && (
-                        <img
-                          src={msg.itineraryThumbnail}
-                          alt="Itinerary thumbnail"
-                          style={{
-                            marginTop: '5px',
-                            width: '100px',
-                            borderRadius: '4px',
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  <span className="time">
-                    {new Date(msg.createdAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-              ))}
+              {currentConversation.map((msg, idx) => {
+                const sender = msg.sender || {};
+                const receiver = msg.receiver || {};
+                return (
+                  <div
+                    key={idx}
+                    className={`message modern-message ${
+                      sender._id?.toString() === loggedUserId
+                        ? 'sent'
+                        : 'received'
+                    }`}
+                  >
+                    {sender._id !== loggedUserId && sender.username && (
+                      <strong
+                        onClick={() => navigate(`/profile/${sender._id}`)}
+                      >
+                        {sender.username}
+                      </strong>
+                    )}
+                    <p>{msg.text}</p>
+                    {msg.itineraryId && (
+                      <div style={{ marginTop: '5px' }}>
+                        {msg.itineraryLink && (
+                          <button
+                            onClick={() =>
+                              (window.location.href = msg.itineraryLink)
+                            }
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              backgroundColor: '#4caf50',
+                              color: 'white',
+                              border: 'none',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            View itinerary 🗺️
+                          </button>
+                        )}
+                        {msg.itineraryThumbnail && (
+                          <img
+                            src={msg.itineraryThumbnail}
+                            alt="Itinerary thumbnail"
+                            style={{
+                              marginTop: '5px',
+                              width: '100px',
+                              borderRadius: '4px',
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+                    <span className="time">
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 

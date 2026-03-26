@@ -10,20 +10,23 @@ import '../pages/MessagePage.css';
 function MessagePage() {
   const navigate = useNavigate();
   const { loggedUserId } = useContext(AuthContext);
+  const [backendMessages, setBackendMessages] = useState([]);
+  const [sharedMessages, setSharedMessages] = useState([]);
   const [messages, setMessages] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Fetch all messages involving loggedUserId
+  //* fetch backend messages
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
       const res = await service.get('/messages/conversations');
-      setMessages(res.data);
+      setBackendMessages(res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -35,46 +38,76 @@ function MessagePage() {
     fetchMessages();
   }, []);
 
-  // Unique users for sidebar
+  //* listen for shared messages in localStorage
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      const stored = JSON.parse(localStorage.getItem('messages')) || [];
+      setSharedMessages(stored);
+    };
+    window.addEventListener('messagesUpdated', handleStorageUpdate);
+    handleStorageUpdate(); // load initially
+    return () =>
+      window.removeEventListener('messagesUpdated', handleStorageUpdate);
+  }, []);
+
+  //* merge backend + shared messages
+  useEffect(() => {
+    const combined = [...backendMessages, ...sharedMessages];
+    combined.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    setMessages(combined);
+  }, [backendMessages, sharedMessages]);
+
+  //* unique users for sidebar
   const uniqueUsers = useMemo(() => {
     const map = new Map();
     messages.forEach((msg) => {
-      if (msg.sender._id !== loggedUserId) map.set(msg.sender._id, msg.sender);
-      if (msg.receiver._id !== loggedUserId)
-        map.set(msg.receiver._id, msg.receiver);
+      let otherUser = null;
+      if (msg.sender._id === loggedUserId) otherUser = msg.receiver;
+      else if (msg.receiver._id === loggedUserId) otherUser = msg.sender;
+      if (otherUser && otherUser._id !== loggedUserId)
+        map.set(otherUser._id, otherUser);
     });
     return Array.from(map.values());
   }, [messages, loggedUserId]);
 
-  // Current conversation with selectedUser
+  //* current conversation
   const currentConversation = useMemo(() => {
     if (!selectedUser) return [];
-    return messages.filter(
-      (msg) =>
+    return messages.filter((msg) => {
+      const isChatMsg =
         (msg.sender._id === selectedUser._id &&
           msg.receiver._id === loggedUserId) ||
         (msg.sender._id === loggedUserId &&
-          msg.receiver._id === selectedUser._id),
-    );
+          msg.receiver._id === selectedUser._id);
+
+      const isSharedItinerary =
+        msg.itineraryId &&
+        ((msg.sender._id === loggedUserId &&
+          msg.receiver._id === selectedUser._id) ||
+          (msg.sender._id === selectedUser._id &&
+            msg.receiver._id === loggedUserId));
+
+      return isChatMsg || isSharedItinerary;
+    });
   }, [messages, selectedUser, loggedUserId]);
 
-  // Auto scroll to bottom
+  //* auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentConversation]);
 
-  // Send message
+  //* send text message
   const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedUser) return;
 
     try {
-      const res = await service.post('/messages', {
+      await service.post('/messages', {
         receiverId: selectedUser._id,
         text: messageText,
       });
 
-      setMessages((prev) => [...prev, res.data]); // append directly
       setMessageText('');
+      fetchMessages();
     } catch (err) {
       console.error(err);
     }
@@ -87,18 +120,26 @@ function MessagePage() {
     }
   };
 
-  // Delete conversation
+  //* delete conversation
   const handleDeleteConversation = async (userId) => {
+    setIsDeleting(true);
     try {
       await service.delete(`/messages/conversation/${userId}`);
-      setMessages((prev) =>
+      setBackendMessages((prev) =>
         prev.filter(
-          (msg) => msg.sender._id !== userId && msg.receiver._id !== userId,
+          (msg) =>
+            !(
+              (msg.sender._id === userId &&
+                msg.receiver._id === loggedUserId) ||
+              (msg.sender._id === loggedUserId && msg.receiver._id === userId)
+            ),
         ),
       );
       if (selectedUser?._id === userId) setSelectedUser(null);
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -114,7 +155,7 @@ function MessagePage() {
     setUserToDelete(null);
   };
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading || isDeleting) return <LoadingSpinner />;
 
   return (
     <div className="message-page modern">
@@ -124,7 +165,9 @@ function MessagePage() {
         {uniqueUsers.map((user) => (
           <div
             key={user._id}
-            className={`user-item modern-user-item ${selectedUser?._id === user._id ? 'active' : ''}`}
+            className={`user-item modern-user-item ${
+              selectedUser?._id === user._id ? 'active' : ''
+            }`}
           >
             <div className="user-info">
               <span onClick={() => setSelectedUser(user)} className="username">
@@ -149,12 +192,17 @@ function MessagePage() {
         {selectedUser ? (
           <>
             <h3>Chat with {selectedUser.username}</h3>
+            <button onClick={fetchMessages} style={{ marginBottom: '10px' }}>
+              Refresh conversation
+            </button>
             <div className="messages modern-messages">
               {currentConversation.map((msg, idx) => (
                 <div
                   key={idx}
                   className={`message modern-message ${
-                    msg.sender._id === loggedUserId ? 'sent' : 'received'
+                    msg.sender._id?.toString() === loggedUserId
+                      ? 'sent'
+                      : 'received'
                   }`}
                 >
                   {msg.sender._id !== loggedUserId && (
@@ -164,7 +212,42 @@ function MessagePage() {
                       {msg.sender.username}
                     </strong>
                   )}
+
                   <p>{msg.text}</p>
+
+                  {msg.itineraryId && (
+                    <div style={{ marginTop: '5px' }}>
+                      {msg.itineraryLink && (
+                        <button
+                          onClick={() =>
+                            (window.location.href = msg.itineraryLink)
+                          }
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          View itinerary 🗺️
+                        </button>
+                      )}
+                      {msg.itineraryThumbnail && (
+                        <img
+                          src={msg.itineraryThumbnail}
+                          alt="Itinerary thumbnail"
+                          style={{
+                            marginTop: '5px',
+                            width: '100px',
+                            borderRadius: '4px',
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+
                   <span className="time">
                     {new Date(msg.createdAt).toLocaleTimeString([], {
                       hour: '2-digit',

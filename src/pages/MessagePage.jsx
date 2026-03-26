@@ -321,7 +321,6 @@ import '../pages/MessagePage.css';
 function MessagePage() {
   const navigate = useNavigate();
   const { loggedUserId } = useContext(AuthContext);
-
   const [backendMessages, setBackendMessages] = useState([]);
   const [sharedMessages, setSharedMessages] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -333,7 +332,7 @@ function MessagePage() {
   const [userToDelete, setUserToDelete] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // FETCH backend messages
+  //* fetch backend messages
   const fetchMessages = async () => {
     setIsLoading(true);
     try {
@@ -350,7 +349,7 @@ function MessagePage() {
     fetchMessages();
   }, []);
 
-  // LISTEN shared messages in localStorage
+  //* listen for shared messages in localStorage
   useEffect(() => {
     const handleStorageUpdate = () => {
       const stored = JSON.parse(localStorage.getItem('messages')) || [];
@@ -362,36 +361,32 @@ function MessagePage() {
       window.removeEventListener('messagesUpdated', handleStorageUpdate);
   }, []);
 
-  // MERGE + NORMALIZE backend + shared messages
+  //* merge and normalize backend + shared messages
   useEffect(() => {
-    const normalizeMessage = (msg) => {
-      // shared messages may have string IDs
-      const sender =
-        typeof msg.sender === 'object'
-          ? msg.sender
-          : { _id: msg.sender, username: msg.senderName || 'Unknown' };
-      const receiver =
-        typeof msg.receiver === 'object'
-          ? msg.receiver
-          : { _id: msg.receiver, username: msg.receiverName || 'Unknown' };
+    const combined = [...backendMessages, ...sharedMessages].map((msg) => ({
+      sender: {
+        _id: msg.sender?._id?.toString() || msg.sender?.toString() || 'unknown',
+        username: msg.sender?.username || msg.senderName || 'Unknown',
+      },
+      receiver: {
+        _id:
+          msg.receiver?._id?.toString() ||
+          msg.receiver?.toString() ||
+          'unknown',
+        username: msg.receiver?.username || msg.receiverName || 'Unknown',
+      },
+      text: msg.text || '',
+      createdAt: msg.createdAt || new Date(),
+      itineraryId: msg.itineraryId || null,
+      itineraryLink: msg.itineraryLink || null,
+      itineraryThumbnail: msg.itineraryThumbnail || null,
+    }));
 
-      return {
-        ...msg,
-        sender: { _id: sender._id.toString(), username: sender.username },
-        receiver: { _id: receiver._id.toString(), username: receiver.username },
-        text: msg.text || '',
-        createdAt: msg.createdAt || new Date(),
-      };
-    };
-
-    const combined = [...backendMessages, ...sharedMessages].map(
-      normalizeMessage,
-    );
     combined.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     setMessages(combined);
   }, [backendMessages, sharedMessages]);
 
-  // UNIQUE users for sidebar
+  //* unique users for sidebar
   const uniqueUsers = useMemo(() => {
     const map = new Map();
     messages.forEach((msg) => {
@@ -404,25 +399,24 @@ function MessagePage() {
     return Array.from(map.values());
   }, [messages, loggedUserId]);
 
-  // CURRENT conversation
+  //* current conversation
   const currentConversation = useMemo(() => {
     if (!selectedUser) return [];
-    return messages.filter((msg) => {
-      return (
+    return messages.filter(
+      (msg) =>
         (msg.sender._id === selectedUser._id &&
           msg.receiver._id === loggedUserId) ||
         (msg.sender._id === loggedUserId &&
-          msg.receiver._id === selectedUser._id)
-      );
-    });
+          msg.receiver._id === selectedUser._id),
+    );
   }, [messages, selectedUser, loggedUserId]);
 
-  // AUTO scroll
+  //* auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentConversation]);
 
-  // SEND message
+  //* send text message
   const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedUser) return;
 
@@ -431,7 +425,6 @@ function MessagePage() {
         receiverId: selectedUser._id,
         text: messageText,
       });
-
       setMessageText('');
       fetchMessages();
     } catch (err) {
@@ -446,7 +439,7 @@ function MessagePage() {
     }
   };
 
-  // DELETE conversation
+  //* delete conversation
   const handleDeleteConversation = async (userId) => {
     setIsDeleting(true);
     try {
@@ -454,11 +447,8 @@ function MessagePage() {
       setBackendMessages((prev) =>
         prev.filter(
           (msg) =>
-            !(
-              (msg.sender._id === userId &&
-                msg.receiver._id === loggedUserId) ||
-              (msg.sender._id === loggedUserId && msg.receiver._id === userId)
-            ),
+            !(msg.sender._id === userId && msg.receiver._id === loggedUserId) &&
+            !(msg.sender._id === loggedUserId && msg.receiver._id === userId),
         ),
       );
       if (selectedUser?._id === userId) setSelectedUser(null);
@@ -491,9 +481,7 @@ function MessagePage() {
         {uniqueUsers.map((user) => (
           <div
             key={user._id}
-            className={`user-item modern-user-item ${
-              selectedUser?._id === user._id ? 'active' : ''
-            }`}
+            className={`user-item modern-user-item ${selectedUser?._id === user._id ? 'active' : ''}`}
           >
             <div className="user-info">
               <span onClick={() => setSelectedUser(user)} className="username">
@@ -525,9 +513,7 @@ function MessagePage() {
               {currentConversation.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`message modern-message ${
-                    msg.sender._id === loggedUserId ? 'sent' : 'received'
-                  }`}
+                  className={`message modern-message ${msg.sender._id === loggedUserId ? 'sent' : 'received'}`}
                 >
                   {msg.sender._id !== loggedUserId && (
                     <strong
@@ -536,6 +522,7 @@ function MessagePage() {
                       {msg.sender.username}
                     </strong>
                   )}
+
                   <p>{msg.text}</p>
 
                   {msg.itineraryId && (

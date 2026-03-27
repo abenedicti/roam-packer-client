@@ -9,32 +9,27 @@ function MessageModal({ match, isOpen, onClose, onMessageSent }) {
   if (!isOpen || !match) return null;
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) return;
     setSending(true);
 
     try {
-      await service.post('/messages', {
-        receiverId: match._id,
-        text: message,
-      });
-
-      // Reset input
-      setMessage('');
-      onClose();
-
-      //* store with refresh
-      const oldMessages = JSON.parse(localStorage.getItem('messages')) || [];
       const newMessage = {
         sender: { _id: 'me', username: 'You' },
         receiver: match,
-        text: message,
+        text: trimmedMessage,
         createdAt: new Date(),
       };
+
+      await service.post('/messages', {
+        receiverId: match._id,
+        text: trimmedMessage,
+      });
+
       if (onMessageSent) onMessageSent(newMessage);
-      localStorage.setItem(
-        'messages',
-        JSON.stringify([...oldMessages, newMessage]),
-      );
+
+      setMessage('');
+      onClose();
     } catch (err) {
       console.error('Error sending message:', err);
       alert('Failed to send message');

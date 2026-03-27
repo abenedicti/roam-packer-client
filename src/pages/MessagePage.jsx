@@ -107,34 +107,35 @@ function MessagePage() {
   const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedUser) return;
 
+    const tempMessage = {
+      _id: Date.now(),
+      sender: { _id: loggedUserId, username: 'You' },
+      receiver: { _id: selectedUser._id, username: selectedUser.username },
+      text: messageText,
+      createdAt: new Date(),
+    };
+
+    setMessages((prev) => {
+      const updated = [...prev, tempMessage];
+      updated.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      return updated;
+    });
+
+    setMessageText('');
+
     try {
-      const newMessage = {
+      const response = await service.post('/messages', {
         receiverId: selectedUser._id,
-        text: messageText,
-      };
-
-      const response = await service.post('/messages', newMessage);
-      const backendMessage = response.data;
-
-      setMessages((prevMessages) => {
-        const updatedMessages = [...prevMessages, backendMessage];
-
-        updatedMessages.sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-        );
-
-        return updatedMessages;
+        text: tempMessage.text,
       });
 
-      const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
-      localStorage.setItem(
-        'messages',
-        JSON.stringify([...storedMessages, backendMessage]),
-      );
+      const backendMessage = response.data;
 
-      setMessageText('');
+      setMessages((prev) =>
+        prev.map((msg) => (msg._id === tempMessage._id ? backendMessage : msg)),
+      );
     } catch (err) {
-      console.error("Erreur lors de l'envoi du message : ", err);
+      console.error("Erreur lors de l'envoi :", err);
     }
   };
 

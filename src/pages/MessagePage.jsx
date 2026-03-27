@@ -42,7 +42,7 @@ function MessagePage() {
   useEffect(() => {
     const handleStorageUpdate = () => {
       const stored = JSON.parse(localStorage.getItem('messages')) || [];
-      // supprimer doublons basés sur _id si existant
+      //* delete duplicate
       const uniqueStored = stored.filter(
         (v, i, a) => a.findIndex((m) => m._id === v._id) === i,
       );
@@ -108,12 +108,22 @@ function MessagePage() {
     if (!messageText.trim() || !selectedUser) return;
 
     try {
-      await service.post('/messages', {
+      const newMessage = {
         receiverId: selectedUser._id,
         text: messageText,
-      });
+      };
+      await service.post('/messages', newMessage);
+
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          ...newMessage,
+          sender: { _id: loggedUserId, username: 'You' },
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+
       setMessageText('');
-      fetchMessages();
     } catch (err) {
       console.error(err);
     }

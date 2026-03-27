@@ -64,7 +64,6 @@
 // }
 
 // export default MessageModal;
-import '../components/MessageModal.css';
 import { useState } from 'react';
 import service from '../services/service.config';
 
@@ -84,25 +83,29 @@ function MessageModal({ match, isOpen, onClose, onMessageSent }) {
         text: message,
       });
 
-      const oldMessages = JSON.parse(localStorage.getItem('messages')) || [];
-      const newMessage = {
-        sender: { _id: 'me', username: 'You' },
-        receiver: match,
-        text: message,
-        createdAt: new Date().toISOString(),
-      };
+      if (response.status === 200) {
+        const newMessage = {
+          sender: { _id: 'me', username: 'You' },
+          receiver: match,
+          text: message,
+          createdAt: new Date().toISOString(),
+        };
 
-      if (onMessageSent) {
-        onMessageSent(newMessage);
+        if (onMessageSent) {
+          onMessageSent(newMessage);
+        }
+
+        const oldMessages = JSON.parse(localStorage.getItem('messages')) || [];
+        localStorage.setItem(
+          'messages',
+          JSON.stringify([...oldMessages, newMessage]),
+        );
+
+        setMessage('');
+        onClose();
+      } else {
+        alert('Message failed to send. Please try again.');
       }
-
-      localStorage.setItem(
-        'messages',
-        JSON.stringify([...oldMessages, newMessage]),
-      );
-
-      setMessage('');
-      onClose();
     } catch (err) {
       console.error('Error sending message:', err);
       alert('Failed to send message');

@@ -104,6 +104,7 @@ function MessagePage() {
   }, [currentConversation]);
 
   //* Send text message
+  //* Send text message
   const handleSendMessage = async () => {
     if (!messageText.trim() || !selectedUser) return;
 
@@ -112,20 +113,24 @@ function MessagePage() {
         receiverId: selectedUser._id,
         text: messageText,
       };
-      await service.post('/messages', newMessage);
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          ...newMessage,
-          sender: { _id: loggedUserId, username: 'You' },
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      const response = await service.post('/messages', newMessage);
+
+      const backendMessage = response.data;
+
+      setMessages((prevMessages) => {
+        const updatedMessages = [...prevMessages, backendMessage];
+
+        updatedMessages.sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+        );
+
+        return updatedMessages;
+      });
 
       setMessageText('');
     } catch (err) {
-      console.error(err);
+      console.error("Erreur lors de l'envoi du message : ", err);
     }
   };
 

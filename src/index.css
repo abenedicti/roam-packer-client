@@ -26,8 +26,6 @@ a {
   font-weight: 500;
   color: var(--btnAndLinks);
   text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-text-fill-color: #ff6600;
 }
 a:hover {
   color: var(--hover);

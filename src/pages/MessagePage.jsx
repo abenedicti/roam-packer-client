@@ -114,7 +114,6 @@ function MessagePage() {
       };
 
       const response = await service.post('/messages', newMessage);
-
       const backendMessage = response.data;
 
       setMessages((prevMessages) => {
@@ -126,6 +125,12 @@ function MessagePage() {
 
         return updatedMessages;
       });
+
+      const storedMessages = JSON.parse(localStorage.getItem('messages')) || [];
+      localStorage.setItem(
+        'messages',
+        JSON.stringify([...storedMessages, backendMessage]),
+      );
 
       setMessageText('');
     } catch (err) {

@@ -21,13 +21,16 @@ function MessageModal({ match, isOpen, onClose, onMessageSent }) {
         createdAt: new Date(),
       };
 
+      // Envoi du message au backend
       await service.post('/messages', {
         receiverId: match._id,
         text: trimmedMessage,
       });
 
+      // Notifie le parent pour mettre à jour l'état
       if (onMessageSent) onMessageSent(newMessage);
 
+      // Reset input et fermeture modal
       setMessage('');
       onClose();
     } catch (err) {

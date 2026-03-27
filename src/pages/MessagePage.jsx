@@ -424,17 +424,12 @@ function MessagePage() {
         receiverId: selectedUser._id,
         text: messageText,
       };
-      await service.post('/messages', newMessage);
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          ...newMessage,
-          sender: { _id: loggedUserId, username: 'You' },
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      const res = await service.post('/messages', newMessage);
+
       setMessageText('');
+
+      setMessages((prevMessages) => [...prevMessages, res.data]);
     } catch (err) {
       console.error("Erreur lors de l'envoi du message:", err);
     }

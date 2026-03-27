@@ -13,7 +13,7 @@ function ItineraryDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [chatUsers, setChatUsers] = useState([]);
   const [sharingStatus, setSharingStatus] = useState({});
-  const [messages, setMessages] = useState([]);
+  const [_messages, setMessages] = useState([]);
 
   //* fetch itinerary
   useEffect(() => {
@@ -77,6 +77,10 @@ function ItineraryDetailsPage() {
   if (!itinerary) return <p>No itinerary found.</p>;
 
   const handleShare = async (user) => {
+    if (user._id === loggedUserId) {
+      return;
+    }
+
     try {
       //* share itinerary on backend
       await service.put(`/itineraries/${itineraryId}/share`, {
@@ -148,32 +152,37 @@ function ItineraryDetailsPage() {
         <h3>Share with someone from your chat</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
           {chatUsers.length === 0 && <p>No conversations yet to share with.</p>}
-          {chatUsers.map((user) => (
-            <button
-              key={user._id}
-              onClick={() => handleShare(user)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '20px',
-                border: '1px solid #4caf50',
-                backgroundColor:
-                  sharingStatus[user._id] === 'success'
-                    ? '#4caf50'
+          {chatUsers.map(
+            (user) =>
+              user._id !== loggedUserId && (
+                <button
+                  key={user._id}
+                  onClick={() => handleShare(user)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    border: '1px solid #4caf50',
+                    backgroundColor:
+                      sharingStatus[user._id] === 'success'
+                        ? '#4caf50'
+                        : sharingStatus[user._id] === 'error'
+                          ? '#f44336'
+                          : 'white',
+                    color:
+                      sharingStatus[user._id] === 'success'
+                        ? 'white'
+                        : '#4caf50',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {sharingStatus[user._id] === 'success'
+                    ? 'Shared ✅'
                     : sharingStatus[user._id] === 'error'
-                      ? '#f44336'
-                      : 'white',
-                color:
-                  sharingStatus[user._id] === 'success' ? 'white' : '#4caf50',
-                cursor: 'pointer',
-              }}
-            >
-              {sharingStatus[user._id] === 'success'
-                ? 'Shared ✅'
-                : sharingStatus[user._id] === 'error'
-                  ? 'Error ❌'
-                  : `Share with ${user.username}`}
-            </button>
-          ))}
+                      ? 'Error ❌'
+                      : `Share with ${user.username}`}
+                </button>
+              ),
+          )}
         </div>
       </div>
     </div>

@@ -202,7 +202,7 @@ function MessagePage() {
             <div className="messages modern-messages">
               {currentConversation.map((msg, idx) => {
                 const sender = msg.sender || {};
-                const receiver = msg.receiver || {};
+
                 return (
                   <div
                     key={idx}

@@ -121,7 +121,7 @@ function MessagePage() {
       return updated;
     });
 
-    setMessageText('');
+    // setMessageText('');
 
     try {
       const response = await service.post('/messages', {

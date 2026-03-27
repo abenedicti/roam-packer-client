@@ -121,8 +121,6 @@ function MessagePage() {
       return updated;
     });
 
-    // setMessageText('');
-
     try {
       const response = await service.post('/messages', {
         receiverId: selectedUser._id,
@@ -134,6 +132,7 @@ function MessagePage() {
       setMessages((prev) =>
         prev.map((msg) => (msg._id === tempMessage._id ? backendMessage : msg)),
       );
+      setMessageText('');
     } catch (err) {
       console.error("Erreur lors de l'envoi :", err);
     }
